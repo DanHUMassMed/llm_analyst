@@ -11,6 +11,8 @@ def dump_api_call(function_name, actual_result, to_json=True):
             os.makedirs(OUTPUT_PATH)
         if to_json:
             actual_result = json.dumps(actual_result, indent=4)
+        if not isinstance(actual_result, str):
+            actual_result = str(actual_result)
 
         with open(f"{OUTPUT_PATH}/{function_name}.txt", 'w', encoding='utf-8') as file:
             file.write(actual_result)
