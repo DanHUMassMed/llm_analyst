@@ -99,9 +99,9 @@ async def test_write_report():
     file_path = os.path.join(os.getcwd(), 'tests/llm_analyst/core/example_scraped_sites.json')
     with open(file_path, 'r') as file:
         data = json.load(file)
-
+    llm_analyst.context = data
     sub_query = "latest news on Burning Man floods May 2024"
-    actual_result = await llm_analyst._get_similar_content_by_query(sub_query, data)
+    actual_result = await llm_analyst.write_report(sub_query, data)
     dump_api_call(function_name, actual_result,to_json=False)
 
 if __name__ == "__main__":

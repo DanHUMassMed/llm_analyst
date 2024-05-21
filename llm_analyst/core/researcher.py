@@ -10,16 +10,8 @@ from llm_analyst.core.config import Config, ReportType
 from llm_analyst.core.prompts import Prompts
 from llm_analyst.core.exceptions import LLMAnalystsException
 from llm_analyst.embedding_methods.compressor import ContextCompressor
+from llm_analyst.core.app_logging import trace_log,logging
 
-
-import logging
-logging.basicConfig(filename='llm_analyst.log', level=logging.DEBUG)
-logging.getLogger("urllib3").setLevel(logging.WARNING)
-logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("openai").setLevel(logging.WARNING)
-logging.getLogger("httpcore").setLevel(logging.WARNING)
-
-logger = logging.getLogger(__name__)
 
 class LLMAnalyst:
     def __init__(
@@ -43,13 +35,10 @@ class LLMAnalyst:
 
     async def conduct_research(self):
         # Generate Agent
-        function_name = inspect.currentframe().f_code.co_name
-        logger.debug("TRACE: Entering %s", function_name)
         if not (self.agent and self.role):
             self.agent, self.role = await self._choose_agent()
         self.context = await self.get_context_by_search()
         time.sleep(2)
-        logger.debug("TRACE: Exiting %s", function_name)
     
     async def get_context_by_search(self):
         """

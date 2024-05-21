@@ -16,3 +16,9 @@ def dump_api_call(function_name, actual_result, to_json=True):
 
         with open(f"{OUTPUT_PATH}/{function_name}.txt", 'w', encoding='utf-8') as file:
             file.write(actual_result)
+
+def get_resource_file_path(file_nm):
+    current_directory = os.getcwd()
+    path_to_resources = "tests/resources/"
+    file_path = os.path.join(current_directory, path_to_resources, file_nm)
+    return file_path

@@ -5,7 +5,8 @@ import os
 import json
 from enum import Enum
 from llm_analyst.core.exceptions import LLMAnalystsException
-from llm_analyst.embedding_methods.embeddings_provider import get_embeddings_provider
+from llm_analyst.core.app_logging import trace_log,logging
+
 
 ## Explore using **kwargs to pass init params to configuration objects
 ##"fast_llm_model" :{"default_val":"openai",kwargs"model=gpt-3.5-turbo-16k, temperature="0.55"},
@@ -25,9 +26,9 @@ class Config:
         self.__data = None
         config_json = self._get_config_file() # Get Default values JSON
         self.__data = self._set_values_for_config(config_json)
+        # Set LLM_ANALYST_CONFIG environment variable to override and default configurations
         config_file_path = os.getenv('LLM_ANALYST_CONFIG', None)
         if config_file_path:
-            # Get User defined values JSON
             config_json = self._get_config_file(config_file_path=config_file_path)
             self.__data = self._set_values_for_config(config_json)
 
@@ -41,6 +42,7 @@ class Config:
     def __dir__(self):
         return self.__data.keys()
 
+    @trace_log
     def _get_config_file(self,config_file_path=None):
         """ Use the default config file override if environment vaiables are set.
         """
@@ -61,6 +63,9 @@ class Config:
 
 
     def _set_values_for_config(self, config_json):
+        """Set the config properties in a dictionary.
+           Evaluate the the property name to determine the correct data type.
+        """
         config_data = {}
         if self.__data:
             config_data = self.__data
@@ -94,6 +99,8 @@ class Config:
         return config_data
 
     def _get_search_method(self, search_method: str):
+        """ Convert the search_method from a string to a callable function.
+        """
         module_name = "llm_analyst.search_methods.internet_search"
         try:
             module = importlib.import_module(module_name)
@@ -104,6 +111,10 @@ class Config:
         return internet_search_method
 
     def _get_llm_model(self, llm_model_module: str):
+        """ Convert the llm_model_module from a string to a Chat Model Object.
+            NOTE: Current relying on a Naming Convension for Model Object
+                  UPPERCASE_MODEL_NM+"_Model"
+        """
         chat_model = None
         module_name = f"llm_analyst.chat_models.{llm_model_module}"
         try:
@@ -116,4 +127,19 @@ class Config:
         return chat_model
     
     def _get_embeddings_provider(self, embeddings_proviver_nm):
-        return get_embeddings_provider(embeddings_proviver_nm)
+        """ Map embeddings_proviver_nm to a Langchain Embeddings Class"""
+        embeddings = None
+        match embeddings_proviver_nm:
+            case "ollama":
+                from langchain_community.embeddings.ollama import OllamaEmbeddings
+                embeddings = OllamaEmbeddings(model="llama3")
+            case "openai":
+                from langchain_openai import OpenAIEmbeddings
+                embeddings = OpenAIEmbeddings()
+            case "huggingface":
+                from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
+                embeddings = HuggingFaceEmbeddings()
+            case _:
+                raise LLMAnalystsException("Embedding provider not found.")
+
+        return embeddings
