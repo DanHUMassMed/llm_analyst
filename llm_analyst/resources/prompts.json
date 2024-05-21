@@ -3,7 +3,7 @@
     "Write {max_iterations} Google search queries to search online that form an objective opinion from the following task: {task}\n",
     "Use the current date if needed: {datetime_now}.\n",
     "Also include in the queries specified task details such as locations, names, etc.\n",
-    "You must respond with a list of strings in the following format: ['query 1', 'query 2', 'query 3']."
+    "You must respond with a list of strings in the following format: [\"query 1\", \"query 2\", \"query 3\"]."
     ],
 "report_prompt":[
     "Information: '''{context}'''\n\n",
@@ -102,7 +102,7 @@
     "You must limit the number of subsections to a maximum of {max_subsections}.\n\n",
     "Content Focus:\n",
     "- The report should focus on answering the question, be well-structured, informative, in-depth, and include facts and numbers if available.\n",
-    "- Use markdown syntax and follow the {report_format.upper()} format.\n\n",
+    "- Use markdown syntax and follow the {report_format} format.\n\n",
     "Structure and Formatting:\n",
     "- As this sub-report will be part of a larger report, include only the main body divided into suitable subtopics without any introduction or conclusion section.\n",
     "- You MUST include markdown hyperlinks to relevant source URLs wherever referenced in the report, for example:\n\n",

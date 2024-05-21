@@ -86,7 +86,6 @@ class Config:
             if key == "embedding_provider" and value is not None:
                 value = self._get_embeddings_provider(value)
 
-
             if key == "llm_provider" and value is not None:
                 value = self._get_llm_model(value)
 
