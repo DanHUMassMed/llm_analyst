@@ -3,21 +3,20 @@ import time
 import importlib
 from datetime import datetime
 import json
-import inspect
 import warnings
 from concurrent.futures.thread import ThreadPoolExecutor
 from llm_analyst.core.config import Config, ReportType
 from llm_analyst.core.prompts import Prompts
 from llm_analyst.core.exceptions import LLMAnalystsException
 from llm_analyst.embedding_methods.compressor import ContextCompressor
-from llm_analyst.core.app_logging import trace_log,logging
+from llm_analyst.utils.app_logging import trace_log,logging
 
 
 class LLMAnalyst:
     def __init__(
         self,
         query: str,
-        report_type:  str = ReportType.ResearchReport,
+        report_type = ReportType.ResearchReport.value,
         agent = None,
         role  = None,
         parent_query: str = "",
@@ -37,10 +36,10 @@ class LLMAnalyst:
         # Generate Agent
         if not (self.agent and self.role):
             self.agent, self.role = await self._choose_agent()
-        self.context = await self.get_context_by_search()
+        self.context = await self._get_context_by_search()
         time.sleep(2)
     
-    async def get_context_by_search(self):
+    async def _get_context_by_search(self):
         """
            Generates the context for the research task by searching the query and scraping the results
         Returns:
@@ -52,7 +51,7 @@ class LLMAnalyst:
         sub_queries = await self._get_sub_queries() + [self.query]
 
         # Using asyncio.gather to process the sub_queries asynchronously
-        context = await asyncio.gather(*[self.process_sub_query(sub_query) for sub_query in sub_queries])
+        context = await asyncio.gather(*[self._process_sub_query(sub_query) for sub_query in sub_queries])
 
         return context
 
@@ -178,12 +177,11 @@ class LLMAnalyst:
     async def _get_similar_content_by_query(self, query, pages):
         # Summarize Raw Data
         context_compressor = ContextCompressor(documents=pages, embeddings=self.cfg.embedding_provider)
-        # Run Tasks
         return context_compressor.get_context(query, max_results=8)
 
 
 
-    async def process_sub_query(self, sub_query: str):
+    async def _process_sub_query(self, sub_query: str):
         """Takes in a sub query and scrapes urls based on it and gathers context.
 
         Args:
@@ -257,14 +255,15 @@ class LLMAnalyst:
             deterministic_temp=0
             messages=[
                     {"role": "system", "content": self.role},
-                    {"role": "user", "content": report_prompt}],
+                    {"role": "user",   "content": report_prompt}]
             
             provider = self.cfg.llm_provider(
                             model=self.cfg.smart_llm_model,
                             temperature=deterministic_temp,
                             max_tokens=self.cfg.smart_token_limit)
             
-            report = await provider.get_chat_response(messages=messages,stream=True)
+            #report = await provider.get_chat_response(messages=messages, stream=True)
+            report = await provider.get_chat_response(messages=messages)
 
         except Exception as e:
             print(f"Error in generate_report: {e}")

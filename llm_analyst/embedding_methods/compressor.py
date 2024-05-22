@@ -1,3 +1,7 @@
+"""
+https://blog.langchain.dev/improving-document-retrieval-with-contextual-compression/
+https://medium.com/@SrGrace_/contextual-compression-langchain-llamaindex-7675c8d1f9eb
+"""
 from typing import Dict, List
 
 from langchain.callbacks.manager import CallbackManagerForRetrieverRun
@@ -39,18 +43,11 @@ class ContextCompressor:
         self.similarity_threshold = 0.38
 
     def _get_contextual_retriever(self):
-        splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
-        relevance_filter = EmbeddingsFilter(embeddings=self.embeddings,
-                                            similarity_threshold=self.similarity_threshold)
-        pipeline_compressor = DocumentCompressorPipeline(
-            transformers=[splitter, relevance_filter]
-        )
-        base_retriever = SearchAPIRetriever(
-            pages=self.documents
-        )
-        contextual_retriever = ContextualCompressionRetriever(
-            base_compressor=pipeline_compressor, base_retriever=base_retriever
-        )
+        splitter             = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+        relevance_filter     = EmbeddingsFilter(embeddings=self.embeddings, similarity_threshold=self.similarity_threshold)
+        pipeline_compressor  = DocumentCompressorPipeline(transformers=[splitter, relevance_filter])
+        base_retriever       = SearchAPIRetriever(pages=self.documents)
+        contextual_retriever = ContextualCompressionRetriever(base_compressor=pipeline_compressor, base_retriever=base_retriever)
         return contextual_retriever
 
     def _pretty_print_docs(self, docs, top_n):

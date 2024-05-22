@@ -1,11 +1,14 @@
 """ Test Cases for Prompts """
 import os
+import inspect
 import pytest
+from tests.utils_for_pytest import dump_api_call, get_resource_file_path
 from datetime import datetime, timezone
 from langchain_openai import OpenAIEmbeddings
 from llm_analyst.chat_models.openai import OPENAI_Model
 from llm_analyst.core.prompts import Prompts
 from llm_analyst.core.exceptions import LLMAnalystsException
+from tests.utils_for_pytest import dump_api_call, get_resource_file_path
 
 
 def test_load_prompts():
@@ -34,10 +37,11 @@ def test_prompt_exception():
     assert actual_result == expected_result
 
 def test_prompt_with_params():
+    function_name = inspect.currentframe().f_code.co_name
     prompts = Prompts()
     expected_result = "Write 2 Google search queries to search online"
     max_iterations=2
-    task="Research this task"
+    task="What happened in the latest burning man floods?"
     datetime_now=datetime.now().strftime('%B %d, %Y')
     actual_result = prompts.get_prompt("search_queries_prompt",
                                        max_iterations=max_iterations,
@@ -46,6 +50,29 @@ def test_prompt_with_params():
 
     # Assertion: Check that the function returns the expected result
     assert actual_result.startswith(expected_result)
+    dump_api_call(function_name, actual_result)
+
+def test_report_prompt():
+    function_name = inspect.currentframe().f_code.co_name
+    prompts = Prompts()
+    expected_result = "Information: '''context data....'''"
+    report_prompt_nm = "report_prompt"
+    query = "What happened in the latest burning man floods?"
+    context="context data...."
+    total_words = 1000
+    report_format = "APA"
+    datetime_now=datetime.now().strftime('%B %d, %Y')
+    actual_result = prompts.get_prompt(report_prompt_nm,
+                                             context=context,
+                                             question=query,
+                                             total_words=total_words,
+                                             report_format=report_format,
+                                             datetime_now = datetime_now)
+    
+
+    # Assertion: Check that the function returns the expected result
+    assert actual_result.startswith(expected_result)
+    dump_api_call(function_name, actual_result)
 
 if __name__ == "__main__":
     pytest.main([__file__])

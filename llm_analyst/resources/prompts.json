@@ -3,7 +3,8 @@
     "Write {max_iterations} Google search queries to search online that form an objective opinion from the following task: {task}\n",
     "Use the current date if needed: {datetime_now}.\n",
     "Also include in the queries specified task details such as locations, names, etc.\n",
-    "You must respond with a list of strings in the following format: [\"query 1\", \"query 2\", \"query 3\"]."
+    "You must respond with a list of strings in the following format: [\"query 1\", \"query 2\", \"query 3\"].",
+    "The response should contain ONLY the list."
     ],
 "report_prompt":[
     "Information: '''{context}'''\n\n",
@@ -14,9 +15,9 @@
     "You must write the report with markdown syntax.\n",
     "Use an unbiased and journalistic tone.\n",
     "You MUST determine your own concrete and valid opinion based on the given information. Do NOT deter to general and meaningless conclusions.\n",
-    "You MUST write all used source urls at the end of the report as references, and make sure not to add duplicated sources, but only one reference for each.\n",
-    "Every url should be hyperlinked: [url website](url)\n",
-    "Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report : \n\n",
+    "You MUST save and write all used source urls at the end of the report as references, and make sure not to add duplicated sources, but only one reference for each.\n",
+    "Every url should be markdown hyperlinked: [url website](url)\n",
+    "Additionally, you MUST include markdown hyperlinks to the relevant URLs wherever they are referenced in the report : \n\n",
     "       e.g.:\n",
     "            # Report Header\n\n",
     "            This is a sample text. ([url website](url))\n\n",

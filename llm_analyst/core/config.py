@@ -3,9 +3,13 @@ import importlib.util
 import importlib
 import os
 import json
+from collections import abc
+import keyword
+
 from enum import Enum
 from llm_analyst.core.exceptions import LLMAnalystsException
-from llm_analyst.core.app_logging import trace_log,logging
+from llm_analyst.utils.app_logging import trace_log,logging
+from llm_analyst.utils.utilities import get_resource_path
 
 
 ## Explore using **kwargs to pass init params to configuration objects
@@ -21,7 +25,7 @@ class ReportType(Enum):
 
 class Config:
     """Config class for LLM Analyst."""
-
+    
     def __init__(self):
         self.__data = None
         config_json = self._get_config_file() # Get Default values JSON
@@ -41,6 +45,13 @@ class Config:
 
     def __dir__(self):
         return self.__data.keys()
+    
+    def __str__(self):
+        ret_val = ""
+        for key in self.__data:
+            ret_val += f"{key} = {self.__data[key]}\n"
+        return ret_val
+
 
     @trace_log
     def _get_config_file(self,config_file_path=None):
@@ -48,10 +59,7 @@ class Config:
         """
         config_json = None
         if not config_file_path:
-            package_nm="llm_analyst.resources"
-            module_spec = importlib.util.find_spec(package_nm)
-            package_path = os.path.dirname(module_spec.origin)
-            config_file_path = os.path.join(package_path, 'llm_analyst.config')
+            config_file_path = os.path.join(get_resource_path(), 'llm_analyst.config')
 
         with open(config_file_path, "r", encoding='utf-8') as json_file:
             config_json = json.load(json_file)
@@ -71,6 +79,8 @@ class Config:
             config_data = self.__data
             
         for key in config_json.keys():
+            if keyword.iskeyword(key):
+                key += '_'
             default_value = config_json[key]['default_val']
             env_var = config_json[key].get('env_var')
             env_value = os.getenv(env_var) if env_var else None
