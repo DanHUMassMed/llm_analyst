@@ -105,7 +105,7 @@ def serp_api_search(query, max_results=7):
     return search_response
 
 
-def ddgs_search(query, max_results=5):
+def ddg_search(query, max_results=5):
     search_response = []
     try:
         ddg = DDGS()

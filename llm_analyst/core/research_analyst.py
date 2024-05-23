@@ -3,42 +3,63 @@ import time
 import importlib
 from datetime import datetime
 import json
+import re
 import warnings
 from concurrent.futures.thread import ThreadPoolExecutor
 from llm_analyst.core.config import Config, ReportType
 from llm_analyst.core.prompts import Prompts
 from llm_analyst.core.exceptions import LLMAnalystsException
 from llm_analyst.embedding_methods.compressor import ContextCompressor
-from llm_analyst.utils.app_logging import trace_log,logging
+from llm_analyst.utils.app_logging import trace_log, logging
+from llm_analyst.core.research_state import ResearchState
+from langchain.output_parsers import PydanticOutputParser
+from langchain.prompts import PromptTemplate
+from typing import List
+from pydantic import BaseModel, Field
 
-
-class LLMAnalyst:
+class LLMAnalyst(ResearchState):
     def __init__(
         self,
-        query: str,
+        active_research_topic: str,
         report_type = ReportType.ResearchReport.value,
-        agent = None,
-        role  = None,
-        parent_query: str = "",
+        agent_type = None,
+        agents_role_prompt  = None,
+        config = Config(),
+        main_research_topic: str = "",
         visited_urls: set = set()
     ):
-        self.query = query
-        self.report_type = report_type
-        self.agent = agent
-        self.role = role
-        self.cfg = Config()
-        self.context = []
-        # Used for detailed reports
-        self.parent_query = parent_query
-        self.visited_urls = visited_urls
+        super().__init__(active_research_topic=active_research_topic, 
+                         report_type=report_type, 
+                         agent_type=agent_type, 
+                         agents_role_prompt=agents_role_prompt, 
+                         main_research_topic=main_research_topic, 
+                         visited_urls=visited_urls)
+        self.cfg = config
+        self.llm_provider = self.cfg.llm_provider(
+            model = self.cfg.llm_model,
+            temperature = self.cfg.llm_temperature,
+            max_tokens = self.cfg.llm_token_limit)
 
     async def conduct_research(self):
         # Generate Agent
-        if not (self.agent and self.role):
-            self.agent, self.role = await self._choose_agent()
-        self.context = await self._get_context_by_search()
-        time.sleep(2)
+        if not (self.agent_type):
+            await self.choose_agent()
+        self.research_findings = await self._get_context_by_search()
+        return self.get_research_state()
+        
+        
     
+    def get_research_state(self):
+        research_state = ResearchState(active_research_topic=self.active_research_topic, 
+                         report_type=self.report_type, 
+                         agent_type=self.agent_type, 
+                         agents_role_prompt=self.agents_role_prompt, 
+                         main_research_topic=self.main_research_topic, 
+                         visited_urls=self.visited_urls)
+        research_state.research_findings = self.research_findings
+        return research_state
+    
+        
     async def _get_context_by_search(self):
         """
            Generates the context for the research task by searching the query and scraping the results
@@ -48,69 +69,135 @@ class LLMAnalyst:
 
         context = []
         # Generate Sub-Queries including original query
-        sub_queries = await self._get_sub_queries() + [self.query]
+        sub_queries = await self._get_sub_queries() + [self.active_research_topic]
 
         # Using asyncio.gather to process the sub_queries asynchronously
         context = await asyncio.gather(*[self._process_sub_query(sub_query) for sub_query in sub_queries])
 
         return context
 
-    async def _choose_agent(self):
-        """
-        Chooses the agent automatically
-
-        Returns:
-            agent: Agent name
-            agent_role_prompt: Agent role prompt
-        """
+    async def choose_agent(self, research_topic = None):
+        default_response={"agent_type":"Default Agent",
+                          "agents_role_prompt":"You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text.",
+                          "active_research_topic":self.active_research_topic
+                          }
         try:
-            deterministic_temp=0
-            auto_agent_instructions = Prompts().get_prompt("auto_agent_instructions")
-            query = f"{self.parent_query} - {self.query}" if self.parent_query else f"{self.query}"
-            messages=[
-                    {"role": "system", "content": auto_agent_instructions},
-                    {"role": "user", "content": f"task: {query}"}]
+            choose_agent_topic = self.active_research_topic
+            if research_topic:
+                choose_agent_topic = research_topic
             
-            provider = self.cfg.llm_provider(
-                            model=self.cfg.smart_llm_model,
-                            temperature=deterministic_temp,
-                            max_tokens=self.cfg.smart_token_limit)
-
-            response = await provider.get_chat_response(messages=messages)
-            agent_dict = json.loads(response)
-            return agent_dict["server"], agent_dict["agent_role_prompt"]
+            llm_system_prompt = Prompts().get_prompt("choose_agent_prompt")
+            llm_user_prompt = f"{self.main_research_topic} - {choose_agent_topic}" if self.main_research_topic else choose_agent_topic
+            chat_response = await self.llm_provider.get_chat_response(llm_system_prompt, llm_user_prompt)
+            logging.debug("choose_agent response = %s",chat_response)
+            
+            chat_response_json = json.loads(chat_response)
         except Exception as e:
-            return "Default Agent", "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."
+            logging.error("Error in choose_agent WILL ATTEMPT to recover %s",e)
+            chat_response_json = await self._extract_json_from_string(chat_response, default_response)
+        
+        self.agent_type = chat_response_json["agentType"]
+        self.agents_role_prompt = chat_response_json["agentRole"]
+        
+        result_dict = {"agent_type":chat_response_json["agentType"],
+                        "agents_role_prompt": chat_response_json["agentRole"],
+                        "active_research_topic":self.active_research_topic
+                        }
+        return result_dict
+    
+    async def _extract_json_from_string(self, chat_response, default_response):
+        result_json = default_response
+        stack = []
+        json_str = ""
+        in_json = False
+        
+        for char in chat_response:
+            if char == '{':
+                stack.append(char)
+                in_json = True
+            if in_json:
+                json_str += char
+            if char == '}':
+                stack.pop()
+                if not stack:
+                    in_json = False
+                    break
+    
+        if json_str:
+            try:
+                # Attempt to parse the extracted string as JSON
+                json_data = json.loads(json_str)
+                result_json = json_data
+            except json.JSONDecodeError:
+                pass
+        
+        return result_json
 
+
+    async def select_subtopics(self, subtopics: list = []) -> list:
+        class Subtopic(BaseModel):
+            task: str = Field(description="Task name", min_length=1)
+
+        class Subtopics(BaseModel):
+            subtopics: List[Subtopic] = []
+
+        try:
+            parser = PydanticOutputParser(pydantic_object=Subtopics)
+            
+            subtopic_prompt_template = Prompts().get_prompt("subtopics_prompt")
+
+            prompt = PromptTemplate(
+                template=subtopic_prompt_template,
+                input_variables=["task", "data", "subtopics", "max_subtopics"],
+                partial_variables={
+                    "format_instructions": parser.get_format_instructions()},
+            )
+
+            model = self.llm_provider.llm
+
+            chain = prompt | model | parser
+
+            output = chain.invoke({
+                "task": self.active_research_topic,
+                "data": self.research_findings,
+                "subtopics": subtopics,
+                "max_subtopics": self.cfg.max_subtopics
+            })
+            subtopics_dict =  output.dict()["subtopics"]
+            subtopics = [subtopic['task'] for subtopic in subtopics_dict]
+        except Exception as e:
+            logging.error("Error in select_subtopics %s",e)
+            
+        return subtopics
+
+        
     async def _get_sub_queries(self):
         """
         Gets the sub queries
         """
+        default_response = []
+        chat_response_json = None
+        try:
+            if self.report_type == ReportType.DetailedReport.value or self.report_type == ReportType.SubtopicReport.value:
+                task = f"{self.main_research_topic} - {self.active_research_topic}"
+            else:
+                task = self.active_research_topic
         
-        if self.report_type == ReportType.DetailedReport.value or self.report_type == ReportType.SubtopicReport.value:
-            task = f"{self.parent_query} - {self.query}"
-        else:
-            task = self.query
-    
-        deterministic_temp=0
-        search_queries_prompt = Prompts().get_prompt("search_queries_prompt",
-                                                     max_iterations=self.cfg.max_iterations,
-                                                     task=task,
-                                                     datetime_now = datetime.now().strftime('%B %d, %Y'))
-        messages=[
-                {"role": "system", "content": self.role},
-                {"role": "user", "content": search_queries_prompt}
-                ]
+            search_queries_prompt = Prompts().get_prompt("search_queries_prompt",
+                                                        max_iterations=self.cfg.max_iterations,
+                                                        task=task,
+                                                        datetime_now = datetime.now().strftime('%B %d, %Y'))
 
-        provider = self.cfg.llm_provider(
-                            model=self.cfg.smart_llm_model,
-                            temperature=deterministic_temp,
-                            max_tokens=self.cfg.smart_token_limit)
-        
-        response = await provider.get_chat_response(messages=messages)
+            chat_response = await self.llm_provider.get_chat_response(self.agents_role_prompt, search_queries_prompt)
+            logging.debug("get_sub_queries response = %s",chat_response)
 
-        sub_queries = json.loads(response)
-        return sub_queries
+            chat_response_json = json.loads(chat_response)
+            
+        except Exception as e:
+            logging.error("Error in get_sub_queries WILL ATTEMPT to recover %s",e)
+            chat_response_json = await self._extract_json_from_string(chat_response, default_response)
+
+        return chat_response_json
 
 
     async def _keep_unique_urls(self, url_set_input):
@@ -149,8 +236,8 @@ class LLMAnalyst:
             try:
                 module_nm="llm_analyst.scrapers.scraper_methods"
                 module = importlib.import_module(module_nm)
-                scraper = getattr(module, scraper_nm)
-                content = scraper(link)
+                scrape_content = getattr(module, scraper_nm)
+                content = scrape_content(link)
 
                 if len(content) < 100:
                     return {"url": link, "raw_content": None}
@@ -175,34 +262,25 @@ class LLMAnalyst:
         return scraped_content_results
 
     async def _get_similar_content_by_query(self, query, pages):
-        # Summarize Raw Data
+        """ Summarize Raw Data """
         context_compressor = ContextCompressor(documents=pages, embeddings=self.cfg.embedding_provider)
-        return context_compressor.get_context(query, max_results=8)
-
-
+        return context_compressor.get_context(query, max_results = 8)
 
     async def _process_sub_query(self, sub_query: str):
-        """Takes in a sub query and scrapes urls based on it and gathers context.
-
-        Args:
-            sub_query (str): The sub-query generated from the original query
-
-        Returns:
-            str: The context gathered from search
-        """
+        """Takes in a sub query and scrapes urls based on it and gathers context."""
 
         scraped_sites = await self._scrape_sites_by_query(sub_query)
         content = await self._get_similar_content_by_query(sub_query, scraped_sites)
         return content
     
-    ##########################################################################################
+    # ##########################################################################################
 
     def get_prompt_by_report_type(self):
         report_type_mapping = {
-            ReportType.ResearchReport.value: "report_prompt",
+            ReportType.ResearchReport.value: "research_report_prompt",
             ReportType.ResourceReport.value: "resource_report_prompt",
-            ReportType.OutlineReport.value: "outline_report_prompt",
-            ReportType.CustomReport.value: "custom_report_prompt", # Not Implemented
+            ReportType.OutlineReport.value:  "outline_report_prompt",
+            ReportType.CustomReport.value:   "custom_report_prompt", # Not Implemented
             ReportType.SubtopicReport.value: "subtopic_report_prompt"
         }
         prompt_by_type = report_type_mapping.get(self.report_type)

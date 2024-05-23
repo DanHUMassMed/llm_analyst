@@ -35,7 +35,7 @@ class SearchAPIRetriever(BaseRetriever):
 
 
 class ContextCompressor:
-    def __init__(self, documents, embeddings, max_results=5, **kwargs):
+    def __init__(self, documents, embeddings, max_results = 5, **kwargs):
         self.max_results = max_results
         self.documents = documents
         self.kwargs = kwargs
@@ -51,10 +51,10 @@ class ContextCompressor:
         return contextual_retriever
 
     def _pretty_print_docs(self, docs, top_n):
-        return f"\n".join(f"Source: {d.metadata.get('source')}\n"
-                          f"Title: {d.metadata.get('title')}\n"
-                          f"Content: {d.page_content}\n"
-                          for i, d in enumerate(docs) if i < top_n)
+        return f"\n".join(f"Source: {doc.metadata.get('source')}\n"
+                          f"Title: {doc.metadata.get('title')}\n"
+                          f"Content: {doc.page_content}\n"
+                          for i, doc in enumerate(docs) if i < top_n)
 
     def get_context(self, query, max_results=5):
         compressed_docs = self._get_contextual_retriever()

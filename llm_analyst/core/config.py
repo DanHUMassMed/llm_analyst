@@ -122,7 +122,7 @@ class Config:
 
     def _get_llm_model(self, llm_model_module: str):
         """ Convert the llm_model_module from a string to a Chat Model Object.
-            NOTE: Current relying on a Naming Convension for Model Object
+            NOTE: Currently relying on a Naming Convension for Model Object
                   UPPERCASE_MODEL_NM+"_Model"
         """
         chat_model = None

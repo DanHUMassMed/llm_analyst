@@ -24,7 +24,10 @@ class GROQ_Model:
             api_key = api_key
         )
 
-    async def get_chat_response(self, messages, stream=False):
+    async def get_chat_response(self, llm_system_prompt, llm_user_prompt, stream=False):
+        messages=[
+            {"role": "system", "content": llm_system_prompt},
+            {"role": "user", "content": f"task: {llm_user_prompt}"}]
         response = ""
         if not stream:
             output = await self.llm.ainvoke(messages)

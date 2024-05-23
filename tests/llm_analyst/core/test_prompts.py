@@ -21,7 +21,7 @@ def test_load_prompts():
 def test_prompt_no_params():
     prompts = Prompts()
     expected_result = "This task involves researching"
-    actual_result = prompts.get_prompt("auto_agent_instructions")
+    actual_result = prompts.get_prompt("choose_agent_prompt")
     # Assertion: Check that the function returns the expected result
     assert actual_result.startswith(expected_result)
 

@@ -5,7 +5,7 @@ import logging
 from tests.utils_for_pytest import dump_api_call, get_resource_file_path
 import pytest
 
-from llm_analyst.core.research_writer import LLMWriter
+from llm_analyst.core.research_publisher import LLMWriter
 logger = logging.getLogger(__name__)
 QUERY    = "What happened in the latest burning man floods?"
 
