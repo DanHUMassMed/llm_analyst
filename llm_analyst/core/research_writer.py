@@ -2,6 +2,7 @@ import asyncio
 import time
 import importlib
 from datetime import datetime
+import markdown
 import json
 import warnings
 import aiofiles
@@ -23,110 +24,136 @@ from llm_analyst.embedding_methods.compressor import ContextCompressor
 from llm_analyst.utils.app_logging import trace_log,logging
 from llm_analyst.utils.utilities import get_resource_path
 from llm_analyst.utils.app_logging import trace_log,logging
+from llm_analyst.core.research_state import ResearchState
 
 
-class LLMWriter:
-    def __init__(
-        self,
-        query: str,
+
+class LLMWriter(ResearchState):
+    def __init__(self,
+        config = Config(),
+        active_research_topic = None,
         report_type = ReportType.ResearchReport.value,
-        agent = None,
-        role  = None,
-        parent_query: str = "",
-        visited_urls: set = set()
-    ):
-        self.query = query
-        self.report_type = report_type
-        self.agent = agent
-        self.role = role
-        self.cfg = Config()
-        self.context = []
-        # Used for detailed reports
-        self.parent_query = parent_query
-        self.visited_urls = visited_urls
-        self.report_md = None
-
-    # async def detailed_report(self):
-    #     main_task_assistant = LLMResearcher(query=query, report_type=report_type)
-    #     await main_task_assistant.conduct_research()
-    #     global_context = main_task_assistant.context
-    #     global_urls = main_task_assistant.visited_urls
+        agent_type = None,
+        agents_role_prompt = None,
+        main_research_topic = "",
+        visited_urls = set()):
+        super().__init__(active_research_topic=active_research_topic, 
+                         report_type=report_type, 
+                         agent_type=agent_type, 
+                         agents_role_prompt=agents_role_prompt, 
+                         main_research_topic=main_research_topic, 
+                         visited_urls=visited_urls)
+        self.cfg = config
+        self.llm_provider = self.cfg.llm_provider(
+            model = self.cfg.llm_model,
+            temperature = self.cfg.llm_temperature,
+            max_tokens = self.cfg.llm_token_limit)
     
+    @classmethod
+    def init(self,research_state):
+        llm_writer = LLMWriter(active_research_topic=research_state.active_research_topic,
+                         report_type=research_state.report_type,
+                         agent_type=research_state.agent_type,
+                         agents_role_prompt=research_state.agents_role_prompt,
+                         main_research_topic=research_state.main_research_topic,
+                         visited_urls=research_state.visited_urls)
+        llm_writer.research_findings = research_state.research_findings
+        llm_writer.report_headings = research_state.report_headings
+        llm_writer.report_md = research_state.report_md
+        return llm_writer
         
-  
-    async def _write_md_to_file(self) -> None:
-        """Asynchronously write md to a file in UTF-8 encoding.
-
-        Args:
-            filename (str): The filename to write to.
-            text (str): The text to write.
-        """
-        file_nm = uuid.uuid4().hex
-        file_path = os.path.join(self.cfg.report_out_dir, f"{file_nm}")
-        if file_path[0]=='~':
-            file_path = os.path.expanduser(file_path)
             
-        filename = f"{file_path}.md"
-        
-        directory = os.path.dirname(filename)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+    def extract_headers(self):
+        # Function to extract headers from markdown text
 
-        # Convert text to UTF-8, replacing any problematic characters
-        text_utf8 = self.report_md.encode('utf-8', errors='replace').decode('utf-8')
+        headers = []
+        parsed_md = markdown.markdown(self.report_md)  # Parse markdown text
+        lines = parsed_md.split("\n")  # Split text into lines
 
-        async with aiofiles.open(filename, "w", encoding='utf-8') as file:
-            await file.write(text_utf8)
-            
-        return file_path
+        stack = []  # Initialize stack to keep track of nested headers
+        for line in lines:
+            if line.startswith("<h") and len(line) > 1:  # Check if the line starts with an HTML header tag
+                #level = int(line[2])  # Extract header level
+                level = line[2] if isinstance(line[2], int) else 0
+                header_text = line[
+                    line.index(">") + 1: line.rindex("<")
+                ]  # Extract header text
 
+                # Pop headers from the stack with higher or equal level
+                while stack and stack[-1]["level"] >= level:
+                    stack.pop()
 
-    async def write_to_pdf(self) -> str:
-        """Converts Markdown text to a PDF file and returns the file path.
-        Returns:
-            str: The encoded file path of the generated PDF.
-        """
-        file_path = await self._write_md_to_file()
-        pdf_styles_path = os.path.join(get_resource_path(), 'pdf_styles.css')
-        logging.debug("pdf_styles_path %s", pdf_styles_path)
+                header = {
+                    "level": level,
+                    "text": header_text,
+                }  # Create header dictionary
+                if stack:
+                    stack[-1].setdefault("children", []).append(
+                        header
+                    )  # Append as child if parent exists
+                else:
+                    # Append as top-level header if no parent exists
+                    headers.append(header)
+
+                stack.append(header)  # Push header onto the stack
+
+        return headers  # Return the list of headers
+    
+    async def write_introduction(self):
+        report_intro = ""
         try:
-            md2pdf(f"{file_path}.pdf",
-                md_content=None,
-                md_file_path=f"{file_path}.md",
-                css_file_path=pdf_styles_path,
-                base_url=None)
-            print(f"Report written to {file_path}.pdf")
-        except Exception as e:
-            print(f"Error in converting Markdown to PDF: {e}")
-            logging.error("Error in converting Markdown to PDF: %s", e)
-            return ""
-
-        encoded_file_path = urllib.parse.quote(f"{file_path}.pdf")
-        return encoded_file_path
-
-    async def write_to_word(self) -> str:
-        """Converts Markdown text to a DOCX file and returns the file path.
-
-        Returns:
-            str: The encoded file path of the generated DOCX.
-        """
-        file_path = await self._write_md_to_file()
-
-        try:
-            # Convert report markdown to HTML
-            html = mistune.html(self.report_md)
-            # Create a document object
-            doc = Document()
-            HtmlToDocx().add_html_to_document(html, doc)
-
-            # Saving the docx document to file_path
-            doc.save(f"{file_path}.docx")
+            report_introduction_prompt = Prompts().get_prompt("report_introduction",
+                                                     question=self.active_research_topic,
+                                                     research_summary=self.initial_findings,
+                                                     datetime_now = datetime.now().strftime('%B %d, %Y'))
+            chat_response = await self.llm_provider.get_chat_response(self.agents_role_prompt, report_introduction_prompt)
+            logging.debug("write_introduction response = %s",chat_response)
             
-            print(f"Report written to {file_path}.docx")
-
-            encoded_file_path = urllib.parse.quote(f"{file_path}.docx")
-            return encoded_file_path
-        
+            report_intro = chat_response
         except Exception as e:
-            print(f"Error in converting Markdown to DOCX: {e}")
+            logging.error("Error in generating report introduction: %s",e)
+
+        return report_intro
+
+    async def write_table_of_contents(self):
+        try:
+            # Function to generate table of contents recursively
+            def generate_table_of_contents(headers, indent_level=0):
+                toc = ""  # Initialize table of contents string
+                for header in headers:
+                    toc += (
+                        " " * (indent_level * 4) + "- " + header["text"] + "\n"
+                    )  # Add header text with indentation
+                    if "children" in header:  # If header has children
+                        toc += generate_table_of_contents(
+                            header["children"], indent_level + 1
+                        )  # Generate TOC for children
+                return toc  # Return the generated table of contents
+
+            # Extract headers from markdown text
+            headers = self.extract_headers()
+            toc = "## Table of Contents\n\n" 
+            toc += generate_table_of_contents(headers)  # Generate table of contents
+
+            return toc  # Return the generated table of contents
+
+        except Exception as e:
+            logging.error("Error in generating table_of_contents: %s",e)
+            return "" 
+
+    async def write_references(self):
+        """
+        This function create a reference section based on kown URLs that have been visited
+        """
+        try:
+            url_markdown = "\n\n\n## References\n\n"
+
+            url_markdown += "".join(f"- [{url}]({url})\n" for url in self.visited_urls)
+
+            return url_markdown
+
+        except Exception as e:
+            print(f"Encountered exception in adding source urls : {e}")
             return ""
+        
+ 

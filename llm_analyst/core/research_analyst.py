@@ -21,12 +21,12 @@ class LLMAnalyst(ResearchState):
     def __init__(
         self,
         active_research_topic: str,
+        config = Config(),
         report_type = ReportType.ResearchReport.value,
         agent_type = None,
-        agents_role_prompt  = None,
-        config = Config(),
-        main_research_topic: str = "",
-        visited_urls: set = set()
+        agents_role_prompt = None,
+        main_research_topic = "",
+        visited_urls = set()
     ):
         super().__init__(active_research_topic=active_research_topic, 
                          report_type=report_type, 
@@ -40,25 +40,28 @@ class LLMAnalyst(ResearchState):
             temperature = self.cfg.llm_temperature,
             max_tokens = self.cfg.llm_token_limit)
 
+    @classmethod
+    def init(self,research_state):
+        llm_analyst = LLMAnalyst(active_research_topic=research_state.active_research_topic,
+                         report_type=research_state.report_type,
+                         agent_type=research_state.agent_type,
+                         agents_role_prompt=research_state.agents_role_prompt,
+                         main_research_topic=research_state.main_research_topic,
+                         visited_urls=research_state.visited_urls)
+        llm_analyst.research_findings = research_state.research_findings
+        llm_analyst.report_headings = research_state.report_headings
+        llm_analyst.report_md = research_state.report_md
+        return llm_analyst
+
     async def conduct_research(self):
         # Generate Agent
         if not (self.agent_type):
             await self.choose_agent()
         self.research_findings = await self._get_context_by_search()
-        return self.get_research_state()
-        
-        
-    
-    def get_research_state(self):
-        research_state = ResearchState(active_research_topic=self.active_research_topic, 
-                         report_type=self.report_type, 
-                         agent_type=self.agent_type, 
-                         agents_role_prompt=self.agents_role_prompt, 
-                         main_research_topic=self.main_research_topic, 
-                         visited_urls=self.visited_urls)
-        research_state.research_findings = self.research_findings
-        return research_state
-    
+        if not self.initial_findings:
+            self.initial_findings = self.research_findings
+            
+        return self.copy_of_research_state()
         
     async def _get_context_by_search(self):
         """
@@ -294,7 +297,7 @@ class LLMAnalyst(ResearchState):
         return prompt_by_type
 
 
-    async def write_report(self, existing_headers: list = []):
+    async def write_report(self):
         """
         generates the final report
         Args:
@@ -308,43 +311,34 @@ class LLMAnalyst(ResearchState):
         report_format = 'APA'
         datetime_now = datetime.now().strftime('%B %d, %Y')
         
-        report = ""
         if self.report_type == "custom_report":
             raise LLMAnalystsException("CUSTOM REPORT Not Implemented")
         elif self.report_type == "subtopic_report":
             report_prompt = Prompts().get_prompt(report_prompt_nm,
-                                            context=self.context,
-                                            current_subtopic=self.query,
-                                            main_topic=self.parent_query,
+                                            context=self.research_findings,
+                                            current_subtopic=self.active_research_topic,
+                                            main_topic=self.main_research_topic,
                                             max_subsections=self.cfg.max_subsections,
                                             report_format=report_format,
-                                            existing_headers=existing_headers,
+                                            existing_headers=self.report_headings,
                                             datetime_now=datetime_now,
                                             total_words=self.cfg.total_words)
         else:
             report_prompt = Prompts().get_prompt(report_prompt_nm,
-                                             context=self.context,
-                                             question=self.query,
+                                             context=self.research_findings,
+                                             question=self.active_research_topic,
                                              total_words=self.cfg.total_words,
                                              report_format=report_format,
                                              datetime_now = datetime_now)
 
         try:
-            deterministic_temp=0
-            messages=[
-                    {"role": "system", "content": self.role},
-                    {"role": "user",   "content": report_prompt}]
             
-            provider = self.cfg.llm_provider(
-                            model=self.cfg.smart_llm_model,
-                            temperature=deterministic_temp,
-                            max_tokens=self.cfg.smart_token_limit)
+            chat_response = await self.llm_provider.get_chat_response(self.agents_role_prompt, report_prompt)
+            logging.debug("get_sub_queries response = %s",chat_response)
+            self.report_md  = chat_response
             
-            #report = await provider.get_chat_response(messages=messages, stream=True)
-            report = await provider.get_chat_response(messages=messages)
-
         except Exception as e:
             print(f"Error in generate_report: {e}")
 
-        return report
+        return self.copy_of_research_state()
 
