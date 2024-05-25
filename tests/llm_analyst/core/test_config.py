@@ -10,7 +10,8 @@ from llm_analyst.core.config import Config
 
 
 def test_use_local_config():
-    # Will find the config from an environment variable
+    """Test finding the config file from an environment variable
+    """
     file_path = get_resource_file_path("llm_analyst_test.config")
     os.environ['LLM_ANALYST_CONFIG'] = file_path
     config = Config()
@@ -21,6 +22,8 @@ def test_use_local_config():
     assert actual_result == expected_result
 
 def test_embedding_provider_lookup():
+    """Test if the embedding provider lookup sets the value using defualt config
+    """
     os.environ.pop('LLM_ANALYST_CONFIG', None)
     config = Config()
     expected_result = OpenAIEmbeddings()
@@ -29,6 +32,7 @@ def test_embedding_provider_lookup():
     assert actual_result == expected_result
 
 def test_llm_provider_lookup():
+    """Test if the LLM Model get set on config"""
     config = Config()
     expected_result = OPENAI_Model
     actual_result = config.llm_provider

@@ -6,31 +6,35 @@ from tests.utils_for_pytest import dump_api_call, get_resource_file_path
 import pytest
 
 from llm_analyst.core.research_analyst import LLMAnalyst
+from llm_analyst.core.research_state import ResearchState
 from llm_analyst.core.config import Config
 
 QUERY    = "What happened in the latest burning man floods?"
-AGENT_NM = "📰 News Agent"
-AGENT_ROLE_PROMPT = "You are a well-informed AI news analyst assistant. Your primary goal is to provide comprehensive, accurate, unbiased, and well-structured news reports based on the latest events and developments."
-TOPIC_URLS = [
-        "https://www.wgem.com/2023/09/04/tens-thousands-still-stranded-by-burning-man-flooding-nevada-desert/",
-        "https://abc11.com/burning-man-death-shelter-in-place-flooding-rain/13731593/",
-        "https://edition.cnn.com/2023/09/03/us/burning-man-storms-shelter-sunday/index.html?obInternalId=71118",
-       ]
-SUB_QUERY = "latest news on Burning Man floods May 2024"
+
+CONFIG_PARAMS = {
+    "internet_search" :{"default_val":"ddg_search"},
+    "llm_provider"    :{"default_val":"openai"},
+    "llm_model"       :{"default_val":"gpt-4o-2024-05-13"},
+    "max_iterations"  :{"default_val":"max_iterations"},
+}
 
 @pytest.mark.asyncio
 async def test_choose_agent():
+    """Test choosing the Agent Tyep and Prompt base upon the Reseach Topic
+    """
     function_name = inspect.currentframe().f_code.co_name
+    test_json_file_path = get_resource_file_path(f"{function_name}.json")
+    expected_result = ResearchState.load(test_json_file_path)
+    
     config = Config()
+    config._set_values_for_config(CONFIG_PARAMS)
     
-    llm_analyst = LLMAnalyst(QUERY)
+    llm_analyst = LLMAnalyst(QUERY, config = config)
+    actual_result = await llm_analyst.choose_agent()
     
-    expected_result = AGENT_NM
-    result_dict = await llm_analyst.choose_agent()
-    actual_result = result_dict['agent_type']
     # Assertion: Check that the function returns the expected result
-    assert actual_result == expected_result
-    dump_api_call(function_name, result_dict)
+    assert actual_result.agent_type == expected_result.agent_type
+    dump_api_call(function_name, actual_result.dump())
 
 @pytest.mark.asyncio
 async def test_get_sub_queries():
@@ -93,14 +97,12 @@ async def test_write_report():
     llm_analyst = LLMAnalyst(QUERY)
     llm_analyst.agent_type = AGENT_NM
     llm_analyst.agents_role_prompt = AGENT_ROLE_PROMPT
-    file_path = get_resource_file_path("example_scraped_sites.json")
-    with open(file_path, 'r') as file:
-        data = json.load(file)
-    llm_analyst.research_findings = data
-    sub_query = "latest news on Burning Man floods May 2024"
-    actual_result = await llm_analyst.write_report()
     
-    dump_api_call(function_name, actual_result.report_md,to_json=False)
+    
+    # llm_analyst.research_findings = data
+    # sub_query = "latest news on Burning Man floods May 2024"
+    actual_result = await llm_analyst.write_report()
+    # dump_api_call(function_name, actual_result.report_md,to_json=False)
 
 if __name__ == "__main__":
     pytest.main([__file__])

@@ -65,7 +65,9 @@ class Config:
             config_json = json.load(json_file)
 
         if not config_json:
-            raise LLMAnalystsException("Config file json failed to load.")
+            error_msg = f"IN Config._get_config_file - Config file json failed to load. [{config_file_path}]"
+            logging.error(error_msg)
+            raise LLMAnalystsException(error_msg)
         
         return config_json
 
@@ -78,23 +80,16 @@ class Config:
         if self.__data:
             config_data = self.__data
             
-        for key in config_json.keys():
+        for key , value in config_json.items():
             if keyword.iskeyword(key):
                 key += '_'
-            default_value = config_json[key]['default_val']
-            env_var = config_json[key].get('env_var')
-            env_value = os.getenv(env_var) if env_var else None
-            value = None
-            if env_value is not None:
-                if isinstance(default_value, int):
-                    value = int(env_value)
-                elif isinstance(default_value, float):
-                    value = float(env_value)
-                else:
-                    value = env_value
-            else:
-                value = default_value
-
+            
+            if isinstance(value, dict):
+                default_val = value.get('default_val', None)
+                env_var     = value.get('env_var', None)
+                env_val     = os.getenv(env_var) if env_var else None
+                value        = env_val if env_val else default_val
+                
             if key == "internet_search" and value is not None:
                 value = self._get_search_method(value)
 
@@ -115,8 +110,10 @@ class Config:
         try:
             module = importlib.import_module(module_name)
             internet_search_method = getattr(module, search_method)
-        except (ImportError, AttributeError) as exc:
-            raise LLMAnalystsException("Search Method not found.") from exc
+        except (ImportError, AttributeError) as e:
+            error_msg = f"IN Config._get_search_method - Search Method not found. [{search_method}]"
+            logging.error(error_msg)
+            raise LLMAnalystsException(error_msg) from e
 
         return internet_search_method
 
@@ -131,8 +128,10 @@ class Config:
             module = importlib.import_module(module_name)
             chat_model_nm = llm_model_module.upper()+"_Model"
             chat_model = getattr(module, chat_model_nm)
-        except (ImportError, AttributeError) as exc:
-            raise LLMAnalystsException("Chat Model not found.") from exc
+        except (ImportError, AttributeError) as e:
+            error_msg = f"IN Config._get_llm_model - Chat Model not found. [{llm_model_module}]"
+            logging.error(error_msg)
+            raise LLMAnalystsException(error_msg) from e
 
         return chat_model
     
@@ -150,6 +149,8 @@ class Config:
                 from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
                 embeddings = HuggingFaceEmbeddings()
             case _:
-                raise LLMAnalystsException("Embedding provider not found.")
+                error_msg = f"IN Config._get_embeddings_provider - Embedding provider not found. [{embeddings_proviver_nm}]"
+                logging.error(error_msg)
+                raise LLMAnalystsException(error_msg)
 
         return embeddings

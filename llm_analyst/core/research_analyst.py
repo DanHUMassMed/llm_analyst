@@ -105,11 +105,10 @@ class LLMAnalyst(ResearchState):
         
         self.agent_type = chat_response_json["agentType"]
         self.agents_role_prompt = chat_response_json["agentRole"]
-        
-        result_dict = {"agent_type":chat_response_json["agentType"],
-                        "agents_role_prompt": chat_response_json["agentRole"],
-                        "active_research_topic":self.active_research_topic }
-        return result_dict
+        research_state = ResearchState(active_research_topic = self.active_research_topic,
+                                       report_type = self.report_type,
+                                       agent_type = self.agent_type )
+        return research_state
     
     async def _extract_json_from_string(self, chat_response, default_response):
         """Helper method

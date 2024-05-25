@@ -26,6 +26,7 @@ class ResearchState:
         ret_val = ""
         ret_val +=f"active_research_topic  = {self.active_research_topic}\n"
         ret_val +=f"main_research_topic    = {self.main_research_topic}\n"
+        ret_val +=f"report_type            = {self.report_type}\n"
         ret_val +=f"Visited URLs length    = {len(self.visited_urls)}\n"
         ret_val +=f"Reseach finding length = {len(self.research_findings)}\n"
         ret_val +=f"Report headings length = {len(self.report_headings)}\n"
@@ -50,8 +51,11 @@ class ResearchState:
     
     @classmethod
     def load(cls, research_state_file_nm):
+        research_state = None
         try:
-            research_state_json = json.loads(research_state_file_nm)
+            with open(research_state_file_nm, 'r', encoding="utf-8") as file:
+                research_state_json = json.load(file)
+
             research_state = ResearchState(active_research_topic = research_state_json["active_research_topic"], 
                                             report_type = research_state_json["report_type"], 
                                             agent_type = research_state_json["agent_type"], 
@@ -66,6 +70,8 @@ class ResearchState:
             
         except Exception:
             raise LLMAnalystsException("Failed to load ResearchState from json file [%s]", research_state_file_nm)
+        
+        return research_state
         
     def dump(self, research_state_file_nm=None):
         research_state_json = {
@@ -84,7 +90,7 @@ class ResearchState:
         try:
             if research_state_file_nm:
                 with open(research_state_file_nm, 'w') as file:
-                    json.dump(research_state_json, research_state_file_nm, indent=4)
+                    json.dump(research_state_json, file, indent=4)
         except Exception:
             raise LLMAnalystsException("Failed to dump ResearchState to json file [%s]", research_state_file_nm)
 

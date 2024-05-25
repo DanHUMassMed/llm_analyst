@@ -1,0 +1,13 @@
+{
+    "active_research_topic": "Test topic",
+    "report_type": "detailed",
+    "agent_type": "news agent",
+    "agents_role_prompt": "agent role",
+    "main_research_topic": "",
+    "visited_urls": [],
+    "initial_findings": [],
+    "research_findings": [],
+    "report_headings": [],
+    "report_md": "",
+    "final_report_md": ""
+}
