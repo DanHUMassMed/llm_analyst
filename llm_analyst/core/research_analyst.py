@@ -1,16 +1,14 @@
 import asyncio
-import time
 import importlib
 from datetime import datetime
 import json
-import re
 import warnings
 from concurrent.futures.thread import ThreadPoolExecutor
 from llm_analyst.core.config import Config, ReportType
 from llm_analyst.core.prompts import Prompts
 from llm_analyst.core.exceptions import LLMAnalystsException
 from llm_analyst.embedding_methods.compressor import ContextCompressor
-from llm_analyst.utils.app_logging import trace_log, logging
+from llm_analyst.utils.app_logging import logging
 from llm_analyst.core.research_state import ResearchState
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
@@ -26,7 +24,7 @@ class LLMAnalyst(ResearchState):
         agent_type = None,
         agents_role_prompt = None,
         main_research_topic = "",
-        visited_urls = set()
+        visited_urls = None
     ):
         super().__init__(active_research_topic=active_research_topic, 
                          report_type=report_type, 
@@ -41,7 +39,7 @@ class LLMAnalyst(ResearchState):
             max_tokens = self.cfg.llm_token_limit)
 
     @classmethod
-    def init(self,research_state):
+    def init(self, research_state):
         llm_analyst = LLMAnalyst(active_research_topic=research_state.active_research_topic,
                          report_type=research_state.report_type,
                          agent_type=research_state.agent_type,
@@ -51,24 +49,25 @@ class LLMAnalyst(ResearchState):
         llm_analyst.research_findings = research_state.research_findings
         llm_analyst.report_headings = research_state.report_headings
         llm_analyst.report_md = research_state.report_md
+        # not attempting to map final_report_md
         return llm_analyst
 
     async def conduct_research(self):
-        # Generate Agent
+        """The Analysts main task is to conduct research"""
         if not (self.agent_type):
             await self.choose_agent()
-        self.research_findings = await self._get_context_by_search()
+        self.research_findings = await self._research_by_internet_search()
         if not self.initial_findings:
             self.initial_findings = self.research_findings
             
         return self.copy_of_research_state()
         
         
-    async def _get_context_by_search(self):
-        """
-           Generates the context for the research task by searching the query and scraping the results
-        Returns:
-            context: List of context
+    async def _research_by_internet_search(self):
+        """ Given an active_research_topic 
+            1. Find a list of related subtopic to search. (LLM)
+            2. For each subtopic find a list of URLs. (Search Engine)
+            3. For each URL scrape the web site for content.
         """
 
         context = []
@@ -81,6 +80,10 @@ class LLMAnalyst(ResearchState):
         return context
 
     async def choose_agent(self, research_topic = None):
+        """ Given an active_research_topic 
+            1. Find an appropriate type of Reseacher (Agent) to do the work
+            2. Note: The prompt that is returned is used to guide the LLM
+        """
         default_response={"agent_type":"Default Agent",
                           "agents_role_prompt":"You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text.",
                           "active_research_topic":self.active_research_topic
@@ -105,11 +108,14 @@ class LLMAnalyst(ResearchState):
         
         result_dict = {"agent_type":chat_response_json["agentType"],
                         "agents_role_prompt": chat_response_json["agentRole"],
-                        "active_research_topic":self.active_research_topic
-                        }
+                        "active_research_topic":self.active_research_topic }
         return result_dict
     
     async def _extract_json_from_string(self, chat_response, default_response):
+        """Helper method
+            In some case the requested JSON response from the LLM is wrapped in explainitory text
+            this method attempts to extract JSON from the LLM ressponse
+        """
         result_json = default_response
         stack = []
         json_str = ""
@@ -139,6 +145,10 @@ class LLMAnalyst(ResearchState):
 
 
     async def select_subtopics(self, subtopics: list = []) -> list:
+        """Used for detailed research 
+           Select related subtopics from the main research topic
+           Note: Here we are esentially defining an "outline" for the research to be conducted  
+        """
         class Subtopic(BaseModel):
             task: str = Field(description="Task name", min_length=1)
 
@@ -177,7 +187,8 @@ class LLMAnalyst(ResearchState):
         
     async def _get_sub_queries(self):
         """
-        Gets the sub queries
+        Given an active_research_topic
+        Request a list of sub queries that could appropraitly answer the active_research_topic
         """
         default_response = []
         chat_response_json = None
@@ -206,8 +217,6 @@ class LLMAnalyst(ResearchState):
 
     async def _keep_unique_urls(self, url_set_input):
         """ Parse the URLS and remove any duplicates
-        Args: url_set_input (set[str]): The url set to get the new urls from
-        Returns: list[str]: The new urls from the given url set
         """
 
         new_urls = []
@@ -220,13 +229,10 @@ class LLMAnalyst(ResearchState):
 
     def _scrape_urls(self, urls):
         """
-        Scrapes the urls
-        Args:
-            urls: List of urls
-
-        Returns:
-            text: str
-
+        Given a list of URLs
+        1. Determine an appropriate scraper based on URL content
+        2. For each URL Scrape the website and aggragate the content into a list of strings
+           one for each site
         """
         def extract_data_from_link(link):
             if link.endswith(".pdf"):
@@ -260,13 +266,20 @@ class LLMAnalyst(ResearchState):
         return content_list
 
     async def _scrape_sites_by_query(self, sub_query):
+        """Given a sub_query
+           1. Call the configured internet search provider and retrieve a list of URLs
+           2. Keep only the Unique URLs
+           3. Scrape the proved site for content
+        """
         search_results = self.cfg.internet_search(sub_query, max_results=self.cfg.max_search_results_per_query)
         new_search_urls = await self._keep_unique_urls([url.get("href") for url in search_results])
         scraped_content_results = self._scrape_urls(new_search_urls)
         return scraped_content_results
 
     async def _get_similar_content_by_query(self, query, pages):
-        """ Summarize Raw Data """
+        """ Instead of immediately returning retrieved documents as-is, 
+            they are compress using the context of the given query, 
+            then only the relevant information is returned. """
         context_compressor = ContextCompressor(documents=pages, embeddings=self.cfg.embedding_provider)
         return context_compressor.get_context(query, max_results = 8)
 
@@ -279,36 +292,11 @@ class LLMAnalyst(ResearchState):
     
     # ##########################################################################################
 
-    def get_prompt_by_report_type(self):
-        report_type_mapping = {
-            ReportType.ResearchReport.value: "research_report_prompt",
-            ReportType.ResourceReport.value: "resource_report_prompt",
-            ReportType.OutlineReport.value:  "outline_report_prompt",
-            ReportType.CustomReport.value:   "custom_report_prompt", # Not Implemented
-            ReportType.SubtopicReport.value: "subtopic_report_prompt"
-        }
-        prompt_by_type = report_type_mapping.get(self.report_type)
-        default_report_type = ReportType.ResearchReport.value
-        if not prompt_by_type:
-            warnings.warn(f"Invalid report type: {self.report_type}.\n"
-                            f"Please use one of the following: {', '.join([enum_value for enum_value in report_type_mapping.keys()])}\n"
-                            f"Using default report type: {default_report_type} prompt.",
-                            UserWarning)
-            prompt_by_type = report_type_mapping.get(default_report_type)
-        return prompt_by_type
-
-
     async def write_report(self):
         """
-        generates the final report
-        Args:
-            existing_headers:
-
-        Returns:
-            report:
-
+        Generate a report based on the report_type specified
         """
-        report_prompt_nm = self.get_prompt_by_report_type()
+        report_prompt_nm = f"{self.report_type}_prompt"
         report_format = 'APA'
         datetime_now = datetime.now().strftime('%B %d, %Y')
         

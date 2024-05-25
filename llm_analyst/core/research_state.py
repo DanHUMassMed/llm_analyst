@@ -1,4 +1,5 @@
 """ Object to maintain the Reseach state as it progressess"""
+import json
 from llm_analyst.core.config import ReportType
 from llm_analyst.core.exceptions import LLMAnalystsException
 
@@ -47,5 +48,50 @@ class ResearchState:
         research_state.final_report_md = self.final_report_md
         return research_state
     
-    
+    @classmethod
+    def load(cls, research_state_file_nm):
+        try:
+            research_state_json = json.loads(research_state_file_nm)
+            research_state = ResearchState(active_research_topic = research_state_json["active_research_topic"], 
+                                            report_type = research_state_json["report_type"], 
+                                            agent_type = research_state_json["agent_type"], 
+                                            agents_role_prompt = research_state_json["agents_role_prompt"], 
+                                            main_research_topic = research_state_json["main_research_topic"], 
+                                            visited_urls = research_state_json["visited_urls"])
+            research_state.initial_findings = research_state_json["initial_findings"]
+            research_state.research_findings = research_state_json["research_findings"]
+            research_state.report_headings = research_state_json["report_headings"]
+            research_state.report_md = research_state_json["report_md"]
+            research_state.final_report_md = research_state_json["final_report_md"]
+            
+        except Exception:
+            raise LLMAnalystsException("Failed to load ResearchState from json file [%s]", research_state_file_nm)
+        
+    def dump(self, research_state_file_nm=None):
+        research_state_json = {
+            "active_research_topic":self.active_research_topic,
+            "report_type":self.report_type,
+            "agent_type":self.agent_type,
+            "agents_role_prompt":self.agents_role_prompt,
+            "main_research_topic":self.main_research_topic,
+            "visited_urls":list(self.visited_urls),
+            "initial_findings":self.initial_findings,
+            "research_findings":self.research_findings,
+            "report_headings":self.report_headings,
+            "report_md":self.report_md,
+            "final_report_md":self.final_report_md
+        }
+        try:
+            if research_state_file_nm:
+                with open(research_state_file_nm, 'w') as file:
+                    json.dump(research_state_json, research_state_file_nm, indent=4)
+        except Exception:
+            raise LLMAnalystsException("Failed to dump ResearchState to json file [%s]", research_state_file_nm)
 
+        return research_state_json
+
+        
+        
+        
+
+        
