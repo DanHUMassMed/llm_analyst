@@ -53,7 +53,7 @@ class Config:
         return ret_val
 
 
-    @trace_log
+    #@trace_log
     def _get_config_file(self,config_file_path=None):
         """ Use the default config file override if environment vaiables are set.
         """

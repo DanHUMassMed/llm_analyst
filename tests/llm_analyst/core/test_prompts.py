@@ -27,7 +27,8 @@ def test_prompt_no_params():
 
 def test_prompt_exception():
     prompts = Prompts()
-    expected_result = "The PROMPT: [search_queries_prompt] expects the following VARIABLES: [max_iterations, task, datetime_now]"
+    expected_result = "ERROR: The PROMPT: [search_queries_prompt] expects the following VARIABLES: [max_iterations, task, datetime_now]"
+
     actual_result = ""
     with pytest.raises(LLMAnalystsException) as exc_info:
         prompts.get_prompt("search_queries_prompt",max_iterations=2)
@@ -56,7 +57,7 @@ def test_report_prompt():
     function_name = inspect.currentframe().f_code.co_name
     prompts = Prompts()
     expected_result = "Information: '''context data....'''"
-    report_prompt_nm = "report_prompt"
+    report_prompt_nm = "research_report_prompt"
     query = "What happened in the latest burning man floods?"
     context="context data...."
     total_words = 1000

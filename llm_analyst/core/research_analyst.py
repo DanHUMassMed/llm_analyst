@@ -63,6 +63,7 @@ class LLMAnalyst(ResearchState):
             
         return self.copy_of_research_state()
         
+        
     async def _get_context_by_search(self):
         """
            Generates the context for the research task by searching the query and scraping the results
