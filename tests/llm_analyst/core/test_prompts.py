@@ -2,14 +2,14 @@
 import os
 import inspect
 import pytest
-from tests.utils_for_pytest import dump_api_call, get_resource_file_path
+from tests.utils_for_pytest import dump_test_results, get_resource_file_path
 from datetime import datetime, timezone
 from langchain_openai import OpenAIEmbeddings
 from llm_analyst.chat_models.openai import OPENAI_Model
 from llm_analyst.core.prompts import Prompts
 from llm_analyst.core.config import Config
 from llm_analyst.core.exceptions import LLMAnalystsException
-from tests.utils_for_pytest import dump_api_call, get_resource_file_path
+from tests.utils_for_pytest import dump_test_results, get_resource_file_path
 
 
 def test_load_prompts():
@@ -69,7 +69,7 @@ def test_prompt_with_params():
 
     # Assertion: Check that the function returns the expected result
     assert actual_result.startswith(expected_result)
-    dump_api_call(function_name, actual_result)
+    dump_test_results(function_name, actual_result)
 
 def test_report_prompt():
     """Test the creatation of the report prompt"""
@@ -92,7 +92,7 @@ def test_report_prompt():
 
     # Assertion: Check that the function returns the expected result
     assert actual_result.startswith(expected_result)
-    dump_api_call(function_name, actual_result)
+    dump_test_results(function_name, actual_result)
 
 if __name__ == "__main__":
     pytest.main([__file__])

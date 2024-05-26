@@ -23,15 +23,13 @@ class LLMAnalyst(ResearchState):
         report_type = ReportType.ResearchReport.value,
         agent_type = None,
         agents_role_prompt = None,
-        main_research_topic = "",
-        visited_urls = None
+        main_research_topic = ""
     ):
         super().__init__(active_research_topic=active_research_topic, 
                          report_type=report_type, 
                          agent_type=agent_type, 
                          agents_role_prompt=agents_role_prompt, 
-                         main_research_topic=main_research_topic, 
-                         visited_urls=visited_urls)
+                         main_research_topic=main_research_topic)
         self.cfg = config
         self.llm_provider = self.cfg.llm_provider(
             model = self.cfg.llm_model,
@@ -41,13 +39,16 @@ class LLMAnalyst(ResearchState):
         self.prompts = Prompts(config)
 
     @classmethod
-    def init(self, research_state):
-        llm_analyst = LLMAnalyst(active_research_topic=research_state.active_research_topic,
-                         report_type=research_state.report_type,
-                         agent_type=research_state.agent_type,
-                         agents_role_prompt=research_state.agents_role_prompt,
-                         main_research_topic=research_state.main_research_topic,
-                         visited_urls=research_state.visited_urls)
+    def init(self, research_state, config = Config()):
+        llm_analyst = LLMAnalyst(active_research_topic = research_state.active_research_topic,
+                                config = config,
+                                report_type = research_state.report_type,
+                                agent_type = research_state.agent_type,
+                                agents_role_prompt = research_state.agents_role_prompt,
+                                main_research_topic = research_state.main_research_topic)
+        
+        llm_analyst.visited_urls = research_state.visited_urls
+        llm_analyst.initial_findings = research_state.initial_findings
         llm_analyst.research_findings = research_state.research_findings
         llm_analyst.report_headings = research_state.report_headings
         llm_analyst.report_md = research_state.report_md

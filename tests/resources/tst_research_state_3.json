@@ -1,0 +1,13 @@
+{
+    "active_research_topic": "This is the active topic",
+    "report_type": "research_report",
+    "agent_type": null,
+    "agents_role_prompt": null,
+    "main_research_topic": "",
+    "visited_urls": [],
+    "initial_findings": [],
+    "research_findings": [],
+    "report_headings": [],
+    "report_md": "",
+    "final_report_md": ""
+}

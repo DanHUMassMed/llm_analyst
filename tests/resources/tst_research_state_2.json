@@ -1,0 +1,26 @@
+{
+    "active_research_topic": "This is the active topic",
+    "report_type": "report_type",
+    "agent_type": "This is the Agent Type",
+    "agents_role_prompt": "This is the Agent Prompt",
+    "main_research_topic": "Main Research topic",
+    "visited_urls": [
+        "https://example.com",
+        "https://another.com"
+    ],
+    "initial_findings": [
+        "Research on topic 1",
+        "Research on topic 2"
+    ],
+    "research_findings": [
+        "Research on topic 1",
+        "Research on topic 2"
+    ],
+    "report_headings": [
+        "#Title",
+        "## Heading1",
+        "### Subheading 1"
+    ],
+    "report_md": "#Report Markdown",
+    "final_report_md": "Final report"
+}

@@ -51,16 +51,18 @@ class LLMPublisher(ResearchState):
     
     @classmethod
     def init(self,research_state):
-        llm_writer = LLMPublisher(active_research_topic=research_state.active_research_topic,
+        llm_publisher = LLMPublisher(active_research_topic=research_state.active_research_topic,
                          report_type=research_state.report_type,
                          agent_type=research_state.agent_type,
                          agents_role_prompt=research_state.agents_role_prompt,
                          main_research_topic=research_state.main_research_topic,
                          visited_urls=research_state.visited_urls)
-        llm_writer.research_findings = research_state.research_findings
-        llm_writer.report_headings = research_state.report_headings
-        llm_writer.report_md = research_state.report_md
-        return llm_writer
+        
+        llm_publisher.visited_urls = research_state.visited_urls
+        llm_publisher.research_findings = research_state.research_findings
+        llm_publisher.report_headings = research_state.report_headings
+        llm_publisher.report_md = research_state.report_md
+        return llm_publisher
         
   
     def _get_file_path(self):

@@ -46,16 +46,18 @@ class LLMEditor(ResearchState):
 
     @classmethod
     def init(self,research_state):
-        llm_analyst = LLMEditor(active_research_topic=research_state.active_research_topic,
+        llm_editor = LLMEditor(active_research_topic=research_state.active_research_topic,
                          report_type=research_state.report_type,
                          agent_type=research_state.agent_type,
                          agents_role_prompt=research_state.agents_role_prompt,
                          main_research_topic=research_state.main_research_topic,
                          visited_urls=research_state.visited_urls)
-        llm_analyst.research_findings = research_state.research_findings
-        llm_analyst.report_headings = research_state.report_headings
-        llm_analyst.report_md = research_state.report_md
-        return llm_analyst
+        
+        llm_editor.visited_urls = research_state.visited_urls
+        llm_editor.research_findings = research_state.research_findings
+        llm_editor.report_headings = research_state.report_headings
+        llm_editor.report_md = research_state.report_md
+        return llm_editor
 
     async def create_detailed_report(self):
         llm_analyst = LLMAnalyst(self.active_research_topic, config = self.cfg)
@@ -70,10 +72,10 @@ class LLMEditor(ResearchState):
                 active_research_topic = subtopic,
                 report_type = "subtopic_report",
                 main_research_topic = primary_research.active_research_topic,
-                visited_urls = primary_research.visited_urls,
                 agents_role_prompt =  primary_research.agents_role_prompt,
                 agent_type = primary_research.agent_type
             )
+            subtopic_assistant.visited_urls = primary_research.visited_urls
             subtopic_assistant.research_findings = primary_research.research_findings
             subtopic_assistant.report_headings = primary_research.report_headings
             

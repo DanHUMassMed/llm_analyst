@@ -12,7 +12,7 @@ from llm_analyst.core.config import Config
 def test_use_local_config():
     """Test finding the config file from an environment variable
     """
-    file_path = get_resource_file_path("llm_analyst_test.config")
+    file_path = get_resource_file_path("tst_llm_analyst.config")
     os.environ['LLM_ANALYST_CONFIG'] = file_path
     config = Config()
     os.environ.pop('LLM_ANALYST_CONFIG', None)

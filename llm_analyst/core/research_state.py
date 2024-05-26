@@ -13,8 +13,9 @@ class ResearchState:
         self.agent_type          = kwargs.get('agent_type', None)
         self.agents_role_prompt  = kwargs.get('agents_role_prompt', None)
         self.main_research_topic = kwargs.get('main_research_topic', "")
-        self.visited_urls        = kwargs.get('visited_urls', set())
         
+        
+        self.visited_urls      = set()
         self.initial_findings  = []
         self.research_findings = []
         self.report_headings   = []
@@ -40,8 +41,9 @@ class ResearchState:
                          report_type=self.report_type, 
                          agent_type=self.agent_type, 
                          agents_role_prompt=self.agents_role_prompt, 
-                         main_research_topic=self.main_research_topic, 
-                         visited_urls=self.visited_urls)
+                         main_research_topic=self.main_research_topic)
+        
+        research_state.visited_urls=self.visited_urls
         research_state.initial_findings = self.initial_findings
         research_state.research_findings = self.research_findings
         research_state.report_headings = self.report_headings
@@ -60,8 +62,9 @@ class ResearchState:
                                             report_type = research_state_json["report_type"], 
                                             agent_type = research_state_json["agent_type"], 
                                             agents_role_prompt = research_state_json["agents_role_prompt"], 
-                                            main_research_topic = research_state_json["main_research_topic"], 
-                                            visited_urls = research_state_json["visited_urls"])
+                                            main_research_topic = research_state_json["main_research_topic"])
+            
+            research_state.visited_urls = set(research_state_json["visited_urls"])
             research_state.initial_findings = research_state_json["initial_findings"]
             research_state.research_findings = research_state_json["research_findings"]
             research_state.report_headings = research_state_json["report_headings"]
@@ -76,16 +79,16 @@ class ResearchState:
     def dump(self, research_state_file_nm=None):
         research_state_json = {
             "active_research_topic":self.active_research_topic,
-            "report_type":self.report_type,
-            "agent_type":self.agent_type,
-            "agents_role_prompt":self.agents_role_prompt,
-            "main_research_topic":self.main_research_topic,
-            "visited_urls":list(self.visited_urls) if self.visited_urls else [],
-            "initial_findings":self.initial_findings,
-            "research_findings":self.research_findings,
-            "report_headings":self.report_headings,
-            "report_md":self.report_md,
-            "final_report_md":self.final_report_md
+            "report_type"          :self.report_type,
+            "agent_type"           :self.agent_type,
+            "agents_role_prompt"   :self.agents_role_prompt,
+            "main_research_topic"  :self.main_research_topic,
+            "visited_urls"         :list(self.visited_urls),
+            "initial_findings"     :self.initial_findings,
+            "research_findings"    :self.research_findings,
+            "report_headings"      :self.report_headings,
+            "report_md"            :self.report_md,
+            "final_report_md"      :self.final_report_md
         }
         try:
             if research_state_file_nm:

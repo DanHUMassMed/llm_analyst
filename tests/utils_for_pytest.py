@@ -5,7 +5,7 @@ import json
 DUMP_API_CALL = True
 OUTPUT_PATH = "test_output"
 
-def dump_api_call(function_name, actual_result, to_json=True):
+def dump_test_results(function_name, actual_result, to_json=True):
     if DUMP_API_CALL:
         if not os.path.exists(OUTPUT_PATH):
             os.makedirs(OUTPUT_PATH)

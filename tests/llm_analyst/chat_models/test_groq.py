@@ -2,7 +2,7 @@
 import os
 import json
 import inspect
-from tests.utils_for_pytest import dump_api_call, get_resource_file_path
+from tests.utils_for_pytest import dump_test_results, get_resource_file_path
 import pytest
 
 from llm_analyst.chat_models.groq import GROQ_Model
@@ -26,4 +26,4 @@ async def test_chat_response_1():
     
     # Assertion: Check that the function returns the expected result
     #assert actual_result == expected_result
-    dump_api_call(function_name, actual_result,to_json=False)
+    dump_test_results(function_name, actual_result,to_json=False)

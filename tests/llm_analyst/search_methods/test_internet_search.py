@@ -1,7 +1,7 @@
 import os
 import pytest
 import inspect
-from tests.utils_for_pytest import dump_api_call
+from tests.utils_for_pytest import dump_test_results
 from llm_analyst.search_methods.internet_search import tavily_search, serper_search, serp_api_search, ddg_search
 from llm_analyst.core.config import Config
 
@@ -27,7 +27,7 @@ def test_tavily_search():
 
     actual_result = config.internet_search(query)
     assert len(actual_result) > 0
-    dump_api_call(function_name, actual_result)
+    dump_test_results(function_name, actual_result)
     
 def test_serper_search():
     function_name = inspect.currentframe().f_code.co_name
@@ -36,7 +36,7 @@ def test_serper_search():
 
     actual_result = config.internet_search(query)
     assert len(actual_result) > 0
-    dump_api_call(function_name, actual_result)
+    dump_test_results(function_name, actual_result)
 
 def test_serp_api_search():
     function_name = inspect.currentframe().f_code.co_name
@@ -45,7 +45,7 @@ def test_serp_api_search():
 
     actual_result = config.internet_search(query)
     assert len(actual_result) > 0
-    dump_api_call(function_name, actual_result)
+    dump_test_results(function_name, actual_result)
 
 def test_ddg_search():
     function_name = inspect.currentframe().f_code.co_name
@@ -54,7 +54,7 @@ def test_ddg_search():
 
     actual_result = config.internet_search(query)
     assert len(actual_result) > 0
-    dump_api_call(function_name, actual_result)
+    dump_test_results(function_name, actual_result)
 
 if __name__ == "__main__":
     pytest.main([__file__])

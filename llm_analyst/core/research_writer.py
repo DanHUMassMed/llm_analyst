@@ -59,6 +59,8 @@ class LLMWriter(ResearchState):
                          agents_role_prompt=research_state.agents_role_prompt,
                          main_research_topic=research_state.main_research_topic,
                          visited_urls=research_state.visited_urls)
+        
+        llm_writer.visited_urls = research_state.visited_urls
         llm_writer.research_findings = research_state.research_findings
         llm_writer.report_headings = research_state.report_headings
         llm_writer.report_md = research_state.report_md
