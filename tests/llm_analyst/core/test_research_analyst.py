@@ -9,42 +9,49 @@ from llm_analyst.core.research_analyst import LLMAnalyst
 from llm_analyst.core.research_state import ResearchState
 from llm_analyst.core.config import Config
 
-QUERY    = "What happened in the latest burning man floods?"
-
 CONFIG_PARAMS = {
-    "internet_search" :{"default_val":"ddg_search"},
-    "llm_provider"    :{"default_val":"openai"},
-    "llm_model"       :{"default_val":"gpt-4o-2024-05-13"},
-    "max_iterations"  :{"default_val":"max_iterations"},
+    "internet_search" :"ddg_search",
+    "max_iterations"  :3,
+    "llm_temperature" :0
 }
 
+def setup_research_analysts(function_name):
+    test_json_file_path = get_resource_file_path(f"{function_name}.json")
+    research_state = ResearchState.load(test_json_file_path)
+    
+    config = Config()
+    config._set_values_for_config(CONFIG_PARAMS)
+    
+    llm_analyst = LLMAnalyst(research_state.active_research_topic, config = config)
+    return llm_analyst, research_state
+
+    
 @pytest.mark.asyncio
 async def test_choose_agent():
     """Test choosing the Agent Tyep and Prompt base upon the Reseach Topic
     """
     function_name = inspect.currentframe().f_code.co_name
-    test_json_file_path = get_resource_file_path(f"{function_name}.json")
-    expected_result = ResearchState.load(test_json_file_path)
-    
-    config = Config()
-    config._set_values_for_config(CONFIG_PARAMS)
-    
-    llm_analyst = LLMAnalyst(QUERY, config = config)
+    llm_analyst, research_state = setup_research_analysts("tst_research_state_1")
     actual_result = await llm_analyst.choose_agent()
     
+    # actual_result.dump(test_json_file_path)
     # Assertion: Check that the function returns the expected result
-    assert actual_result.agent_type == expected_result.agent_type
+    assert actual_result.agent_type == research_state.agent_type
     dump_api_call(function_name, actual_result.dump())
+    
 
 @pytest.mark.asyncio
 async def test_get_sub_queries():
     function_name = inspect.currentframe().f_code.co_name
-    llm_analyst = LLMAnalyst(QUERY)
-    llm_analyst.agent_type = AGENT_NM
-    llm_analyst.agents_role_prompt = AGENT_ROLE_PROMPT
+    llm_analyst, research_state = setup_research_analysts("tst_research_state_1")
+    
+    llm_analyst.agent_type = research_state.agent_type
+    llm_analyst.agents_role_prompt = research_state.agents_role_prompt
+    
     expected_result = llm_analyst.cfg.max_iterations
     
     actual_result = await llm_analyst._get_sub_queries()
+    # llm_analyst.dump(test_json_file_path)
     
     # Assertion: Check that the function returns the expected result
     assert len(actual_result) == expected_result
@@ -53,7 +60,14 @@ async def test_get_sub_queries():
 @pytest.mark.asyncio
 def test_scrape_urls():
     function_name = inspect.currentframe().f_code.co_name
-    llm_analyst = LLMAnalyst(QUERY)
+    test_json_file_path = get_resource_file_path(f"{function_name}.json")
+    research_state = ResearchState.load(test_json_file_path)
+
+    config = Config()
+    config._set_values_for_config(CONFIG_PARAMS)
+    
+    llm_analyst = LLMAnalyst(research_state.active_research_topic, config = config)
+
 
     actual_result = llm_analyst._scrape_urls(TOPIC_URLS)
     # Just check that you doe get results

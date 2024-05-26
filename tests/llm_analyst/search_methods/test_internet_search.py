@@ -2,7 +2,7 @@ import os
 import pytest
 import inspect
 from tests.utils_for_pytest import dump_api_call
-from llm_analyst.search_methods.internet_search import tavily_search, serper_search, serp_api_search, ddgs_search
+from llm_analyst.search_methods.internet_search import tavily_search, serper_search, serp_api_search, ddg_search
 from llm_analyst.core.config import Config
 
 
@@ -20,7 +20,6 @@ def setup_search_config(search_method_nm, search_method):
     return config
     
     
-
 def test_tavily_search():
     function_name = inspect.currentframe().f_code.co_name
     query = "What happened in the latest burning man floods?"
@@ -48,10 +47,10 @@ def test_serp_api_search():
     assert len(actual_result) > 0
     dump_api_call(function_name, actual_result)
 
-def test_ddgs_search():
+def test_ddg_search():
     function_name = inspect.currentframe().f_code.co_name
     query = "What happened in the latest burning man floods?"
-    config = setup_search_config("ddgs_search", ddgs_search)
+    config = setup_search_config("ddg_search", ddg_search)
 
     actual_result = config.internet_search(query)
     assert len(actual_result) > 0

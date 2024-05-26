@@ -32,12 +32,23 @@ def test_embedding_provider_lookup():
     assert actual_result == expected_result
 
 def test_llm_provider_lookup():
-    """Test if the LLM Model get set on config"""
+    """Test if the LLM Model gets set on config"""
     config = Config()
     expected_result = OPENAI_Model
     actual_result = config.llm_provider
     # Assertion: Check that the function returns the expected result
     assert actual_result == expected_result
+
+def test_get_prompt_json_path():
+    """ Test if an environment variable can be used for the prompt json path """
+    prompt_json_path = get_resource_file_path("tst_prompts.json")
+    config_params = {"prompt_json_path" :prompt_json_path}
+    
+    config = Config()
+    config._set_values_for_config(config_params)
+    
+    actual_results = config.get_prompt_json_path()
+    assert actual_results == prompt_json_path
 
 if __name__ == "__main__":
     pytest.main([__file__])

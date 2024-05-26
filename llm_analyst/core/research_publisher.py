@@ -46,6 +46,8 @@ class LLMPublisher(ResearchState):
             model = self.cfg.llm_model,
             temperature = self.cfg.llm_temperature,
             max_tokens = self.cfg.llm_token_limit)
+        
+        self.prompts = Prompts(config)
     
     @classmethod
     def init(self,research_state):

@@ -7,28 +7,26 @@ import json
 import re
 from llm_analyst.core.exceptions import LLMAnalystsException
 from llm_analyst.utils.app_logging import logging
+from llm_analyst.core.config import Config
 
 class Prompts:
     """Loads prompts for LLM calls"""
     _instance = None
     _prompts = None
 
-    def __new__(cls):
+    def __new__(cls,config=Config()):
         if cls._instance is None:
             cls._instance = super(Prompts, cls).__new__(cls)
-            cls._prompts = cls._load_prompts()
+            cls._prompts = cls._load_prompts(config)
         return cls._instance
 
 
     @classmethod
-    def _load_prompts(cls):
+    def _load_prompts(cls, config):
         prompts_json = None
         prompts = {}
         try:
-            package_nm="llm_analyst.resources"
-            module_spec = importlib.util.find_spec(package_nm)
-            package_path = os.path.dirname(module_spec.origin)
-            config_file_path = os.path.join(package_path, 'prompts.json')
+            config_file_path = config.get_prompt_json_path()
 
             with open(config_file_path, "r", encoding='utf-8') as json_file:
                 prompts_json = json.load(json_file)                

@@ -37,6 +37,8 @@ class LLMAnalyst(ResearchState):
             model = self.cfg.llm_model,
             temperature = self.cfg.llm_temperature,
             max_tokens = self.cfg.llm_token_limit)
+        
+        self.prompts = Prompts(config)
 
     @classmethod
     def init(self, research_state):
@@ -93,7 +95,7 @@ class LLMAnalyst(ResearchState):
             if research_topic:
                 choose_agent_topic = research_topic
             
-            llm_system_prompt = Prompts().get_prompt("choose_agent_prompt")
+            llm_system_prompt = self.prompts.get_prompt("choose_agent_prompt")
             llm_user_prompt = f"{self.main_research_topic} - {choose_agent_topic}" if self.main_research_topic else choose_agent_topic
             chat_response = await self.llm_provider.get_chat_response(llm_system_prompt, llm_user_prompt)
             logging.debug("choose_agent response = %s",chat_response)
@@ -107,7 +109,8 @@ class LLMAnalyst(ResearchState):
         self.agents_role_prompt = chat_response_json["agentRole"]
         research_state = ResearchState(active_research_topic = self.active_research_topic,
                                        report_type = self.report_type,
-                                       agent_type = self.agent_type )
+                                       agent_type = self.agent_type,
+                                       agents_role_prompt = self.agents_role_prompt)
         return research_state
     
     async def _extract_json_from_string(self, chat_response, default_response):
@@ -157,7 +160,7 @@ class LLMAnalyst(ResearchState):
         try:
             parser = PydanticOutputParser(pydantic_object=Subtopics)
             
-            subtopic_prompt_template = Prompts().get_prompt("subtopics_prompt")
+            subtopic_prompt_template = self.prompts.get_prompt("subtopics_prompt")
 
             prompt = PromptTemplate(
                 template=subtopic_prompt_template,
@@ -197,7 +200,7 @@ class LLMAnalyst(ResearchState):
             else:
                 task = self.active_research_topic
         
-            search_queries_prompt = Prompts().get_prompt("search_queries_prompt",
+            search_queries_prompt = self.prompts.get_prompt("search_queries_prompt",
                                                         max_iterations=self.cfg.max_iterations,
                                                         task=task,
                                                         datetime_now = datetime.now().strftime('%B %d, %Y'))
@@ -302,7 +305,7 @@ class LLMAnalyst(ResearchState):
         if self.report_type == "custom_report":
             raise LLMAnalystsException("CUSTOM REPORT Not Implemented")
         elif self.report_type == "subtopic_report":
-            report_prompt = Prompts().get_prompt(report_prompt_nm,
+            report_prompt = self.prompts.get_prompt(report_prompt_nm,
                                             context=self.research_findings,
                                             current_subtopic=self.active_research_topic,
                                             main_topic=self.main_research_topic,
@@ -312,7 +315,7 @@ class LLMAnalyst(ResearchState):
                                             datetime_now=datetime_now,
                                             total_words=self.cfg.total_words)
         else:
-            report_prompt = Prompts().get_prompt(report_prompt_nm,
+            report_prompt = self.prompts.get_prompt(report_prompt_nm,
                                              context=self.research_findings,
                                              question=self.active_research_topic,
                                              total_words=self.cfg.total_words,

@@ -48,6 +48,8 @@ class LLMWriter(ResearchState):
             model = self.cfg.llm_model,
             temperature = self.cfg.llm_temperature,
             max_tokens = self.cfg.llm_token_limit)
+        
+        self.prompts = Prompts(config)
     
     @classmethod
     def init(self,research_state):
@@ -102,7 +104,7 @@ class LLMWriter(ResearchState):
     async def write_introduction(self):
         report_intro = ""
         try:
-            report_introduction_prompt = Prompts().get_prompt("report_introduction",
+            report_introduction_prompt = self.prompts.get_prompt("report_introduction",
                                                      question=self.active_research_topic,
                                                      research_summary=self.initial_findings,
                                                      datetime_now = datetime.now().strftime('%B %d, %Y'))

@@ -2,7 +2,7 @@
     "active_research_topic": "What happened in the latest burning man floods?",
     "report_type": "research_report",
     "agent_type": "\ud83d\udcf0 News Agent",
-    "agents_role_prompt": null,
+    "agents_role_prompt": "You are a diligent AI news reporter assistant. Your primary goal is to gather, verify, and present accurate, timely, and well-structured news reports on current events, ensuring clarity, neutrality, and comprehensiveness.",
     "main_research_topic": "",
     "visited_urls": [],
     "initial_findings": [],

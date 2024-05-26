@@ -53,6 +53,19 @@ class Config:
         return ret_val
 
 
+    def  get_prompt_json_path(self):
+        """Get the user defined path to prompts json 'prompt_json_path' 
+           or return the defaults if a configuration is not provided
+        """
+        prompt_json_path = self.__data.get('prompt_json_path', None)
+        if not prompt_json_path:
+            package_nm="llm_analyst.resources"
+            module_spec = importlib.util.find_spec(package_nm)
+            package_path = os.path.dirname(module_spec.origin)
+            prompt_json_path = os.path.join(package_path, 'prompts.json')
+        return prompt_json_path
+
+
     #@trace_log
     def _get_config_file(self,config_file_path=None):
         """ Use the default config file override if environment vaiables are set.

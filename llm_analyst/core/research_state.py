@@ -80,7 +80,7 @@ class ResearchState:
             "agent_type":self.agent_type,
             "agents_role_prompt":self.agents_role_prompt,
             "main_research_topic":self.main_research_topic,
-            "visited_urls":list(self.visited_urls),
+            "visited_urls":list(self.visited_urls) if self.visited_urls else [],
             "initial_findings":self.initial_findings,
             "research_findings":self.research_findings,
             "report_headings":self.report_headings,
