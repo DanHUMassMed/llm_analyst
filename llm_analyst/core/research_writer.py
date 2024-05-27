@@ -52,8 +52,9 @@ class LLMWriter(ResearchState):
         self.prompts = Prompts(config)
     
     @classmethod
-    def init(self,research_state):
+    def init(self,research_state, config = Config()):
         llm_writer = LLMWriter(active_research_topic=research_state.active_research_topic,
+                         config = config,
                          report_type=research_state.report_type,
                          agent_type=research_state.agent_type,
                          agents_role_prompt=research_state.agents_role_prompt,
@@ -61,13 +62,14 @@ class LLMWriter(ResearchState):
                          visited_urls=research_state.visited_urls)
         
         llm_writer.visited_urls = research_state.visited_urls
+        llm_writer.initial_findings = research_state.initial_findings
         llm_writer.research_findings = research_state.research_findings
         llm_writer.report_headings = research_state.report_headings
         llm_writer.report_md = research_state.report_md
         return llm_writer
         
             
-    def extract_headers(self):
+    def _extract_headers(self):
         # Function to extract headers from markdown text
 
         headers = []
@@ -78,7 +80,7 @@ class LLMWriter(ResearchState):
         for line in lines:
             if line.startswith("<h") and len(line) > 1:  # Check if the line starts with an HTML header tag
                 #level = int(line[2])  # Extract header level
-                level = line[2] if isinstance(line[2], int) else 0
+                level = line[2] if line[2].isdigit() else 0
                 header_text = line[
                     line.index(">") + 1: line.rindex("<")
                 ]  # Extract header text
@@ -110,10 +112,9 @@ class LLMWriter(ResearchState):
                                                      question=self.active_research_topic,
                                                      research_summary=self.initial_findings,
                                                      datetime_now = datetime.now().strftime('%B %d, %Y'))
-            chat_response = await self.llm_provider.get_chat_response(self.agents_role_prompt, report_introduction_prompt)
-            logging.debug("write_introduction response = %s",chat_response)
+            report_intro = await self.llm_provider.get_chat_response(self.agents_role_prompt, report_introduction_prompt)
+            logging.debug("write_introduction response = %s",report_intro)
             
-            report_intro = chat_response
         except Exception as e:
             logging.error("Error in generating report introduction: %s",e)
 
@@ -135,7 +136,7 @@ class LLMWriter(ResearchState):
                 return toc  # Return the generated table of contents
 
             # Extract headers from markdown text
-            headers = self.extract_headers()
+            headers = self._extract_headers()
             toc = "## Table of Contents\n\n" 
             toc += generate_table_of_contents(headers)  # Generate table of contents
 

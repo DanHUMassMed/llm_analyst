@@ -16,7 +16,7 @@ CONFIG_PARAMS = {
     "max_subtopics"   :3
 }
 
-def setup_research_analysts(function_name):
+def setup_research_state(function_name):
     test_json_file_path = get_resource_file_path(f"{function_name}.json")
     research_state = ResearchState.load(test_json_file_path)
     
@@ -27,11 +27,11 @@ def setup_research_analysts(function_name):
     return llm_analyst, research_state
 
 @pytest.mark.asyncio
-async def test_init():
+async def test_analyst_init():
     """Test the init method
     """
     function_name = inspect.currentframe().f_code.co_name
-    llm_analyst, research_state = setup_research_analysts("tst_research_state_4")
+    llm_analyst, research_state = setup_research_state("tst_research_state_4")
     llm_analyst_from_research_state = LLMAnalyst.init(research_state)
         
     # actual_result.dump(test_json_file_path)
@@ -44,7 +44,7 @@ async def test_choose_agent():
     """Test choosing the Agent Type and Prompt base upon the Reseach Topic
     """
     function_name = inspect.currentframe().f_code.co_name
-    llm_analyst, research_state = setup_research_analysts("tst_research_state_1")
+    llm_analyst, research_state = setup_research_state("tst_research_state_1")
     actual_result = await llm_analyst.choose_agent()
     
     # actual_result.dump(test_json_file_path)
@@ -56,7 +56,7 @@ async def test_choose_agent():
 @pytest.mark.asyncio
 async def test_select_subtopic():
     function_name = inspect.currentframe().f_code.co_name
-    llm_analyst, research_state = setup_research_analysts("tst_research_state_4")
+    llm_analyst, research_state = setup_research_state("tst_research_state_4")
 
     actual_result = await llm_analyst.select_subtopics()
 
@@ -69,7 +69,7 @@ async def test_select_subtopic():
 @pytest.mark.asyncio
 async def test_get_sub_queries():
     function_name = inspect.currentframe().f_code.co_name
-    llm_analyst, research_state = setup_research_analysts("tst_research_state_1")
+    llm_analyst, research_state = setup_research_state("tst_research_state_1")
     
     llm_analyst.agent_type = research_state.agent_type
     llm_analyst.agents_role_prompt = research_state.agents_role_prompt
@@ -86,7 +86,7 @@ async def test_get_sub_queries():
 
 def test_scrape_urls():
     function_name = inspect.currentframe().f_code.co_name
-    llm_analyst, research_state = setup_research_analysts("tst_research_state_4")
+    llm_analyst, research_state = setup_research_state("tst_research_state_4")
     
     actual_result = llm_analyst._scrape_urls(list(research_state.visited_urls)[:3])
     
@@ -97,7 +97,7 @@ def test_scrape_urls():
 @pytest.mark.asyncio
 async def test_keep_unique_urls():
     function_name = inspect.currentframe().f_code.co_name
-    llm_analyst, research_state = setup_research_analysts("tst_research_state_4")
+    llm_analyst, research_state = setup_research_state("tst_research_state_4")
     
     topic_urls = ["https://www.nytimes.com/article/burning-man-mud-trapped.html",
                 "https://apnews.com/article/NEW_ARTICLE",
@@ -110,7 +110,7 @@ async def test_keep_unique_urls():
 @pytest.mark.asyncio
 async def test_get_similar_content_by_query():
     function_name = inspect.currentframe().f_code.co_name
-    llm_analyst, research_state = setup_research_analysts("tst_research_state_4")
+    llm_analyst, research_state = setup_research_state("tst_research_state_4")
     
     file_path = get_resource_file_path("tst_scrape_urls.json")
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -134,7 +134,7 @@ async def test_get_similar_content_by_query():
 @pytest.mark.asyncio
 async def test_write_report():
     function_name = inspect.currentframe().f_code.co_name
-    llm_analyst, research_state = setup_research_analysts("tst_research_state_4")
+    llm_analyst, research_state = setup_research_state("tst_research_state_4")
     
     # llm_analyst.research_findings = data
     # sub_query = "latest news on Burning Man floods May 2024"

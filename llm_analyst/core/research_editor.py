@@ -18,6 +18,7 @@ from typing import List
 from pydantic import BaseModel, Field
 from llm_analyst.core.research_analyst import LLMAnalyst
 from llm_analyst.core.research_writer import LLMWriter
+from llm_analyst.utils.app_logging import logging
 
 class LLMEditor(ResearchState):
     def __init__(
@@ -45,8 +46,9 @@ class LLMEditor(ResearchState):
         self.prompts = Prompts(config)
 
     @classmethod
-    def init(self,research_state):
+    def init(self,research_state, config = Config()):
         llm_editor = LLMEditor(active_research_topic=research_state.active_research_topic,
+                         config = config,   
                          report_type=research_state.report_type,
                          agent_type=research_state.agent_type,
                          agents_role_prompt=research_state.agents_role_prompt,
@@ -54,6 +56,7 @@ class LLMEditor(ResearchState):
                          visited_urls=research_state.visited_urls)
         
         llm_editor.visited_urls = research_state.visited_urls
+        llm_editor.initial_findings = research_state.initial_findings
         llm_editor.research_findings = research_state.research_findings
         llm_editor.report_headings = research_state.report_headings
         llm_editor.report_md = research_state.report_md
@@ -62,8 +65,8 @@ class LLMEditor(ResearchState):
     async def create_detailed_report(self):
         llm_analyst = LLMAnalyst(self.active_research_topic, config = self.cfg)
         primary_research = await llm_analyst.conduct_research()
-        print("="*40)
-        print(primary_research)
+        logging.debug("="*40)
+        logging.debug(primary_research)
         subtopics = await llm_analyst.select_subtopics()
 
         for subtopic in subtopics:
@@ -80,7 +83,7 @@ class LLMEditor(ResearchState):
             subtopic_assistant.report_headings = primary_research.report_headings
             
             subtopic_research = await subtopic_assistant.conduct_research()
-            print(f"Writing {subtopic}")
+            logging.debug(f"Writing {subtopic}")
             subtopic_report = await subtopic_assistant.write_report()
 
             primary_research.research_findings = subtopic_assistant.research_findings

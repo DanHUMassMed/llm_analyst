@@ -50,8 +50,9 @@ class LLMPublisher(ResearchState):
         self.prompts = Prompts(config)
     
     @classmethod
-    def init(self,research_state):
+    def init(self,research_state, config = Config()):
         llm_publisher = LLMPublisher(active_research_topic=research_state.active_research_topic,
+                         config = config,
                          report_type=research_state.report_type,
                          agent_type=research_state.agent_type,
                          agents_role_prompt=research_state.agents_role_prompt,
@@ -59,9 +60,11 @@ class LLMPublisher(ResearchState):
                          visited_urls=research_state.visited_urls)
         
         llm_publisher.visited_urls = research_state.visited_urls
+        llm_publisher.initial_findings = research_state.initial_findings
         llm_publisher.research_findings = research_state.research_findings
         llm_publisher.report_headings = research_state.report_headings
         llm_publisher.report_md = research_state.report_md
+        llm_publisher.final_report_md = research_state.final_report_md
         return llm_publisher
         
   

@@ -326,7 +326,7 @@ class LLMAnalyst(ResearchState):
         try:
             
             chat_response = await self.llm_provider.get_chat_response(self.agents_role_prompt, report_prompt)
-            logging.debug("get_sub_queries response = %s",chat_response)
+            #logging.debug("write_report response = %s",chat_response)
             self.report_md  = chat_response
             
         except Exception as e:
