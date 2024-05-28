@@ -9,6 +9,8 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 logging.getLogger("hpack.hpack").setLevel(logging.WARNING)
 logging.getLogger("hpack.table").setLevel(logging.WARNING)
 logging.getLogger("langchain_community.utils.math").setLevel(logging.WARNING)
+logging.getLogger("fontTools.ttLib.ttFont").setLevel(logging.WARNING)
+logging.getLogger("fontTools.subset").setLevel(logging.WARNING)
 
 
 logger = logging.getLogger(__name__)

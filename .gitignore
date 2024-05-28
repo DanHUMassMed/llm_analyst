@@ -15,5 +15,5 @@ test_output/
 # IPython
 profile_default/
 ipython_config.py
-
+freeze.txt
 
