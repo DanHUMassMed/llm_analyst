@@ -13,10 +13,12 @@ long_description = (this_directory / "README.md").read_text()
 requirements_path = this_directory / "requirements.txt"
 install_requires = requirements_path.read_text().splitlines()
 
+packages = find_packages(include=['llm_analyst', 'llm_analyst.*'], exclude=['tests', 'tests.*'])
+print("Discovered packages:", packages)
 
-setup(name='llm_analyst',
-      version='0.1.0',
-      description='LLL Research tool',
+setup(name='research-task',
+      version='0.1.3',
+      description='LLM Research tool',
       long_description_content_type="text/markdown",
       long_description=long_description,
 
@@ -25,7 +27,7 @@ setup(name='llm_analyst',
       author_email='daniel.higgins@yahoo.com',
       license='MIT',
 
-      packages=find_packages(),
+      packages=packages,
       install_requires=install_requires,
       include_package_data=True,
       zip_safe=False)

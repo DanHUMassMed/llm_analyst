@@ -1,4 +1,5 @@
 include README.md
+include requirements.txt
 include llm_analyst/resources/llm_analyst.config
 include llm_analyst/resources/pdf_styles.css
 include llm_analyst/resources/prompts.json
