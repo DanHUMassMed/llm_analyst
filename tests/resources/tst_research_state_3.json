@@ -2,6 +2,7 @@
     "active_research_topic": "This is the active topic",
     "report_type": "research_report",
     "agent_type": null,
+    "data_source": "web",
     "agents_role_prompt": null,
     "main_research_topic": "",
     "visited_urls": [],

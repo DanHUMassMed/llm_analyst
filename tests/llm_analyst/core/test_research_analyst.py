@@ -23,20 +23,18 @@ def setup_research_state(function_name):
     config = Config()
     config._set_values_for_config(CONFIG_PARAMS)
     
-    llm_analyst = LLMAnalyst.init(research_state, config = config)
+    llm_analyst = LLMAnalyst(config = config, **research_state.dump())
     return llm_analyst, research_state
 
 @pytest.mark.asyncio
 async def test_analyst_init():
-    """Test the init method
-    """
+    """Test the init method"""
     function_name = inspect.currentframe().f_code.co_name
     llm_analyst, research_state = setup_research_state("tst_research_state_4")
-    llm_analyst_from_research_state = LLMAnalyst.init(research_state)
-        
+      
     # actual_result.dump(test_json_file_path)
     # Assertion: Check that the function returns the expected result
-    assert research_state.dump() == llm_analyst_from_research_state.dump()
+    assert research_state.dump() == llm_analyst.dump()
     
     
 @pytest.mark.asyncio
@@ -136,8 +134,6 @@ async def test_write_report():
     function_name = inspect.currentframe().f_code.co_name
     llm_analyst, research_state = setup_research_state("tst_research_state_4")
     
-    # llm_analyst.research_findings = data
-    # sub_query = "latest news on Burning Man floods May 2024"
     actual_result = await llm_analyst.write_report()
     dump_test_results(function_name, actual_result.report_md,to_json=False)
 

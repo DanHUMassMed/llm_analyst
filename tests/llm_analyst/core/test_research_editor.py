@@ -25,21 +25,10 @@ def setup_research_state(function_name):
     config = Config()
     config._set_values_for_config(CONFIG_PARAMS)
     
-    llm_editor = LLMEditor.init(research_state, config = config)
+    llm_editor = LLMEditor(config = config, **research_state.dump())
     return llm_editor, research_state
 
 
-@pytest.mark.asyncio
-async def test_editor_init():
-    """Test the init method
-    """
-    function_name = inspect.currentframe().f_code.co_name
-    llm_editor, research_state = setup_research_state("tst_research_state_4")
-    llm_editor_from_research_state = LLMEditor.init(research_state)
-        
-    # actual_result.dump(test_json_file_path)
-    # Assertion: Check that the function returns the expected result
-    assert research_state.dump() == llm_editor_from_research_state.dump()
 
 @pytest.mark.asyncio
 async def test_create_detailed_report():
@@ -48,7 +37,7 @@ async def test_create_detailed_report():
 
     config = Config()
     config._set_values_for_config(CONFIG_PARAMS)
-    llm_editor = LLMEditor(research_topic, config = config)
+    llm_editor = LLMEditor(active_research_topic = research_topic, config = config)
 
     actual_result = await llm_editor.create_detailed_report()
     dump_test_results(function_name, actual_result.dump())

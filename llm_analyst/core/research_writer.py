@@ -1,73 +1,31 @@
-import asyncio
-import time
-import importlib
 from datetime import datetime
 import markdown
-import json
-import warnings
-import aiofiles
-import urllib
-import uuid
-import importlib.util
-import os
 
 from md2pdf.core import md2pdf
 import mistune
 from docx import Document
 from htmldocx import HtmlToDocx
 
-from concurrent.futures.thread import ThreadPoolExecutor
 from llm_analyst.core.config import Config, ReportType
 from llm_analyst.core.prompts import Prompts
-from llm_analyst.core.exceptions import LLMAnalystsException
-from llm_analyst.embedding_methods.compressor import ContextCompressor
-from llm_analyst.utils.app_logging import trace_log,logging
 from llm_analyst.utils.utilities import get_resource_path
 from llm_analyst.utils.app_logging import trace_log,logging
-from llm_analyst.core.research_state import ResearchState
+from llm_analyst.core.research_state import ResearchState, DataSource
 
 
 
 class LLMWriter(ResearchState):
-    def __init__(self,
-        config = Config(),
-        active_research_topic = None,
-        report_type = ReportType.ResearchReport.value,
-        agent_type = None,
-        agents_role_prompt = None,
-        main_research_topic = "",
-        visited_urls = set()):
-        super().__init__(active_research_topic=active_research_topic, 
-                         report_type=report_type, 
-                         agent_type=agent_type, 
-                         agents_role_prompt=agents_role_prompt, 
-                         main_research_topic=main_research_topic, 
-                         visited_urls=visited_urls)
-        self.cfg = config
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+        self.cfg = kwargs.get('config', Config())
+        
         self.llm_provider = self.cfg.llm_provider(
             model = self.cfg.llm_model,
             temperature = self.cfg.llm_temperature,
             max_tokens = self.cfg.llm_token_limit)
         
-        self.prompts = Prompts(config)
-    
-    @classmethod
-    def init(self,research_state, config = Config()):
-        llm_writer = LLMWriter(active_research_topic=research_state.active_research_topic,
-                         config = config,
-                         report_type=research_state.report_type,
-                         agent_type=research_state.agent_type,
-                         agents_role_prompt=research_state.agents_role_prompt,
-                         main_research_topic=research_state.main_research_topic,
-                         visited_urls=research_state.visited_urls)
-        
-        llm_writer.visited_urls = research_state.visited_urls
-        llm_writer.initial_findings = research_state.initial_findings
-        llm_writer.research_findings = research_state.research_findings
-        llm_writer.report_headings = research_state.report_headings
-        llm_writer.report_md = research_state.report_md
-        return llm_writer
-        
+        self.prompts = Prompts(self.cfg)
             
     def _extract_headers(self):
         # Function to extract headers from markdown text

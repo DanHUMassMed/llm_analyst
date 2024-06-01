@@ -2,6 +2,7 @@
     "active_research_topic": "This is the active topic",
     "report_type": "report_type",
     "agent_type": "This is the Agent Type",
+    "data_source": "web",
     "agents_role_prompt": "This is the Agent Prompt",
     "main_research_topic": "Main Research topic",
     "visited_urls": [

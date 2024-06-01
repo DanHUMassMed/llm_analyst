@@ -18,10 +18,15 @@ from llm_analyst.utils.utilities import get_resource_path
 class ReportType(Enum):
     ResearchReport = 'research_report'
     ResourceReport = 'resource_report'
-    OutlineReport = 'outline_report'
-    CustomReport = 'custom_report'
+    OutlineReport  = 'outline_report'
+    CustomReport   = 'custom_report'
     DetailedReport = 'detailed_report'
     SubtopicReport = 'subtopic_report'
+
+class DataSource(Enum):
+    Web        = 'web'
+    LocalStore = 'local_store'
+    SelectURLs = 'select_urls'
 
 class Config:
     """Config class for LLM Analyst."""
@@ -74,10 +79,10 @@ class Config:
         if not config_file_path:
             config_file_path = os.path.join(get_resource_path(), 'llm_analyst.config')
 
-        with open(config_file_path, "r", encoding='utf-8') as json_file:
-            config_json = json.load(json_file)
-
-        if not config_json:
+        try:
+            with open(config_file_path, "r", encoding='utf-8') as json_file:
+                config_json = json.load(json_file)
+        except Exception:
             error_msg = f"IN Config._get_config_file - Config file json failed to load. [{config_file_path}]"
             logging.error(error_msg)
             raise LLMAnalystsException(error_msg)

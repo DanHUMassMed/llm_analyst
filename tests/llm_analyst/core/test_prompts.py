@@ -29,7 +29,9 @@ def test_load_prompts_from_env():
     config = Config()
     config._set_values_for_config(config_params)
     
+    Prompts.reset_instance()
     actual_results = Prompts(config).get_prompt('this_is_a_test_prompt')
+    Prompts.reset_instance()
     assert actual_results.startswith(expected_result)
     
 

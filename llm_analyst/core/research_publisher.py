@@ -15,58 +15,25 @@ import mistune
 from docx import Document
 from htmldocx import HtmlToDocx
 
-from concurrent.futures.thread import ThreadPoolExecutor
-from llm_analyst.core.config import Config, ReportType
+from llm_analyst.core.config import Config, ReportType, DataSource
 from llm_analyst.core.prompts import Prompts
-from llm_analyst.core.exceptions import LLMAnalystsException
-from llm_analyst.embedding_methods.compressor import ContextCompressor
 from llm_analyst.utils.app_logging import trace_log,logging
 from llm_analyst.utils.utilities import get_resource_path
-from llm_analyst.utils.app_logging import trace_log,logging
 
 from llm_analyst.core.research_state import ResearchState
 
 class LLMPublisher(ResearchState):
-    def __init__(self,
-        config = Config(),
-        active_research_topic = None,
-        report_type = ReportType.ResearchReport.value,
-        agent_type = None,
-        agents_role_prompt = None,
-        main_research_topic = "",
-        visited_urls = set()):
-        super().__init__(active_research_topic=active_research_topic, 
-                         report_type=report_type, 
-                         agent_type=agent_type, 
-                         agents_role_prompt=agents_role_prompt, 
-                         main_research_topic=main_research_topic, 
-                         visited_urls=visited_urls)
-        self.cfg = config
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+        self.cfg = kwargs.get('config', Config())
+        
         self.llm_provider = self.cfg.llm_provider(
             model = self.cfg.llm_model,
             temperature = self.cfg.llm_temperature,
             max_tokens = self.cfg.llm_token_limit)
         
-        self.prompts = Prompts(config)
-    
-    @classmethod
-    def init(self,research_state, config = Config()):
-        llm_publisher = LLMPublisher(active_research_topic=research_state.active_research_topic,
-                         config = config,
-                         report_type=research_state.report_type,
-                         agent_type=research_state.agent_type,
-                         agents_role_prompt=research_state.agents_role_prompt,
-                         main_research_topic=research_state.main_research_topic,
-                         visited_urls=research_state.visited_urls)
-        
-        llm_publisher.visited_urls = research_state.visited_urls
-        llm_publisher.initial_findings = research_state.initial_findings
-        llm_publisher.research_findings = research_state.research_findings
-        llm_publisher.report_headings = research_state.report_headings
-        llm_publisher.report_md = research_state.report_md
-        llm_publisher.final_report_md = research_state.final_report_md
-        return llm_publisher
-        
+        self.prompts = Prompts(self.cfg)
   
     def _get_file_path(self):
         file_nm = uuid.uuid4().hex

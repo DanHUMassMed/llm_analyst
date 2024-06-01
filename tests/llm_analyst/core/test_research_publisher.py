@@ -26,21 +26,9 @@ def setup_research_state(function_name):
     config = Config()
     config._set_values_for_config(CONFIG_PARAMS)
     
-    llm_publisher = LLMPublisher.init(research_state, config = config)
+    llm_publisher = LLMPublisher(config = config, **research_state.dump())
     return llm_publisher, research_state
 
-
-@pytest.mark.asyncio
-async def test_publisher_init():
-    """Test the init method
-    """
-    function_name = inspect.currentframe().f_code.co_name
-    llm_analyst, research_state = setup_research_state("tst_research_state_5")
-    llm_publisher_from_research_state = LLMPublisher.init(research_state)
-        
-    # actual_result.dump(test_json_file_path)
-    # Assertion: Check that the function returns the expected result
-    assert research_state.dump() == llm_publisher_from_research_state.dump()
     
 @pytest.mark.asyncio
 async def test_publish_to_md_file():

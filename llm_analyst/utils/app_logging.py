@@ -11,6 +11,7 @@ logging.getLogger("hpack.table").setLevel(logging.WARNING)
 logging.getLogger("langchain_community.utils.math").setLevel(logging.WARNING)
 logging.getLogger("fontTools.ttLib.ttFont").setLevel(logging.WARNING)
 logging.getLogger("fontTools.subset").setLevel(logging.WARNING)
+logging.getLogger("chardet").setLevel(logging.WARNING)
 
 
 logger = logging.getLogger(__name__)

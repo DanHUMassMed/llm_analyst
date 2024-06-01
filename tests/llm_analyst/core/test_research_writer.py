@@ -25,20 +25,9 @@ def setup_research_state(function_name):
     config = Config()
     config._set_values_for_config(CONFIG_PARAMS)
     
-    llm_writer = LLMWriter.init(research_state, config = config)
+    llm_writer = LLMWriter(config = config, **research_state.dump())
     return llm_writer, research_state
 
-
-@pytest.mark.asyncio
-async def test_writer_init():
-    """Test the init method
-    """
-    function_name = inspect.currentframe().f_code.co_name
-    llm_writer, research_state = setup_research_state("tst_research_state_4")
-    llm_writer_from_research_state = LLMWriter.init(research_state)
-        
-    # Assertion: Check that the function returns the expected result
-    assert research_state.dump() == llm_writer_from_research_state.dump()
     
 def test_extract_headers():
     function_name = inspect.currentframe().f_code.co_name
@@ -46,7 +35,6 @@ def test_extract_headers():
     report_headers = llm_writer._extract_headers()
     assert len(report_headers) == 3
     dump_test_results(function_name, report_headers)
-    
     
 @pytest.mark.asyncio
 async def test_write_introduction():

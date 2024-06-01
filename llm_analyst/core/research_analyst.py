@@ -16,54 +16,29 @@ from typing import List
 from pydantic import BaseModel, Field
 
 class LLMAnalyst(ResearchState):
-    def __init__(
-        self,
-        active_research_topic: str,
-        config = Config(),
-        report_type = ReportType.ResearchReport.value,
-        agent_type = None,
-        agents_role_prompt = None,
-        main_research_topic = ""
-    ):
-        super().__init__(active_research_topic=active_research_topic, 
-                         report_type=report_type, 
-                         agent_type=agent_type, 
-                         agents_role_prompt=agents_role_prompt, 
-                         main_research_topic=main_research_topic)
-        self.cfg = config
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+        self.cfg = kwargs.get('config', Config())
+        
         self.llm_provider = self.cfg.llm_provider(
             model = self.cfg.llm_model,
             temperature = self.cfg.llm_temperature,
             max_tokens = self.cfg.llm_token_limit)
         
-        self.prompts = Prompts(config)
+        self.prompts = Prompts(self.cfg)
 
-    @classmethod
-    def init(self, research_state, config = Config()):
-        llm_analyst = LLMAnalyst(active_research_topic = research_state.active_research_topic,
-                                config = config,
-                                report_type = research_state.report_type,
-                                agent_type = research_state.agent_type,
-                                agents_role_prompt = research_state.agents_role_prompt,
-                                main_research_topic = research_state.main_research_topic)
         
-        llm_analyst.visited_urls = research_state.visited_urls
-        llm_analyst.initial_findings = research_state.initial_findings
-        llm_analyst.research_findings = research_state.research_findings
-        llm_analyst.report_headings = research_state.report_headings
-        llm_analyst.report_md = research_state.report_md
-        # not attempting to map final_report_md
-        return llm_analyst
-
     async def conduct_research(self):
         """The Analysts main task is to conduct research"""
         if not (self.agent_type):
             await self.choose_agent()
+            
         self.research_findings = await self._research_by_internet_search()
         if not self.initial_findings:
             self.initial_findings = self.research_findings
             
-        return self.copy_of_research_state()
+        return self.copy_state()
         
         
     async def _research_by_internet_search(self):
@@ -221,11 +196,11 @@ class LLMAnalyst(ResearchState):
     async def _keep_unique_urls(self, url_set_input):
         """ Parse the URLS and remove any duplicates
         """
-
         new_urls = []
+        
         for url in url_set_input:
             if url not in self.visited_urls:
-                self.visited_urls.add(url)
+                self.visited_urls.append(url)
                 new_urls.append(url)
 
         return new_urls
@@ -332,5 +307,5 @@ class LLMAnalyst(ResearchState):
         except Exception as e:
             print(f"Error in generate_report: {e}")
 
-        return self.copy_of_research_state()
+        return self.copy_state()
 

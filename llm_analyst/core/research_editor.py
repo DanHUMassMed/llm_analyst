@@ -1,69 +1,26 @@
-import asyncio
-import time
-import importlib
-from datetime import datetime
-import json
-import re
-import warnings
-from concurrent.futures.thread import ThreadPoolExecutor
 from llm_analyst.core.config import Config, ReportType
 from llm_analyst.core.prompts import Prompts
-from llm_analyst.core.exceptions import LLMAnalystsException
-from llm_analyst.embedding_methods.compressor import ContextCompressor
 from llm_analyst.utils.app_logging import trace_log, logging
-from llm_analyst.core.research_state import ResearchState
-from langchain.output_parsers import PydanticOutputParser
-from langchain.prompts import PromptTemplate
-from typing import List
-from pydantic import BaseModel, Field
+from llm_analyst.core.research_state import ResearchState, DataSource
 from llm_analyst.core.research_analyst import LLMAnalyst
 from llm_analyst.core.research_writer import LLMWriter
 from llm_analyst.utils.app_logging import logging
 
 class LLMEditor(ResearchState):
-    def __init__(
-        self,
-        active_research_topic: str,
-        config = Config(),
-        report_type = ReportType.ResearchReport.value,
-        agent_type = None,
-        agents_role_prompt = None,
-        main_research_topic = "",
-        visited_urls = set()
-    ):
-        super().__init__(active_research_topic=active_research_topic, 
-                         report_type=report_type, 
-                         agent_type=agent_type, 
-                         agents_role_prompt=agents_role_prompt, 
-                         main_research_topic=main_research_topic, 
-                         visited_urls=visited_urls)
-        self.cfg = config
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+        self.cfg = kwargs.get('config', Config())
+        
         self.llm_provider = self.cfg.llm_provider(
             model = self.cfg.llm_model,
             temperature = self.cfg.llm_temperature,
             max_tokens = self.cfg.llm_token_limit)
         
-        self.prompts = Prompts(config)
-
-    @classmethod
-    def init(self,research_state, config = Config()):
-        llm_editor = LLMEditor(active_research_topic=research_state.active_research_topic,
-                         config = config,   
-                         report_type=research_state.report_type,
-                         agent_type=research_state.agent_type,
-                         agents_role_prompt=research_state.agents_role_prompt,
-                         main_research_topic=research_state.main_research_topic,
-                         visited_urls=research_state.visited_urls)
-        
-        llm_editor.visited_urls = research_state.visited_urls
-        llm_editor.initial_findings = research_state.initial_findings
-        llm_editor.research_findings = research_state.research_findings
-        llm_editor.report_headings = research_state.report_headings
-        llm_editor.report_md = research_state.report_md
-        return llm_editor
+        self.prompts = Prompts(self.cfg)
 
     async def create_detailed_report(self):
-        llm_analyst = LLMAnalyst(self.active_research_topic, config = self.cfg)
+        llm_analyst = LLMAnalyst(config = self.cfg, **self.dump())
         primary_research = await llm_analyst.conduct_research()
         logging.debug("="*40)
         logging.debug(primary_research)
@@ -76,26 +33,29 @@ class LLMEditor(ResearchState):
                 report_type = "subtopic_report",
                 main_research_topic = primary_research.active_research_topic,
                 agents_role_prompt =  primary_research.agents_role_prompt,
-                agent_type = primary_research.agent_type
+                agent_type = primary_research.agent_type,
+                visited_urls = primary_research.visited_urls,
+                research_findings = primary_research.research_findings,
+                report_headings = primary_research.report_headings,
+                onfig = self.cfg
             )
-            subtopic_assistant.visited_urls = primary_research.visited_urls
-            subtopic_assistant.research_findings = primary_research.research_findings
-            subtopic_assistant.report_headings = primary_research.report_headings
             
             subtopic_research = await subtopic_assistant.conduct_research()
-            logging.debug(f"Writing {subtopic}")
             subtopic_report = await subtopic_assistant.write_report()
 
             primary_research.research_findings = subtopic_assistant.research_findings
-            primary_research.visited_urls.update(subtopic_assistant.visited_urls)
+            primary_research.visited_urls = list(set(primary_research.visited_urls).union(subtopic_assistant.visited_urls))
             primary_research.report_md += "\n\n\n" + subtopic_report.report_md
+            logging.debug(f"Writing {subtopic} research_findings=len({len(primary_research.research_findings)})")
             
         
-        introduction = await LLMWriter.init(primary_research).write_introduction()
-        toc = await LLMWriter.init(primary_research).write_table_of_contents()
-        references = await LLMWriter.init(primary_research).write_references()
+        llm_writer = LLMWriter(config = self.cfg, **primary_research.dump())
+        
+        introduction = await llm_writer.write_introduction()
+        toc = await llm_writer.write_table_of_contents()
+        references = await llm_writer.write_references()
         primary_research.final_report_md = f"{introduction}\n\n{toc}\n\n{primary_research.report_md}\n\n{references}"
-        return primary_research.copy_of_research_state()
+        return primary_research.copy_state()
         
         
         

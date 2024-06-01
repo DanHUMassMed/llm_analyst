@@ -20,6 +20,10 @@ class Prompts:
             cls._prompts = cls._load_prompts(config)
         return cls._instance
 
+    @classmethod
+    def reset_instance(cls):
+        cls._instance = None
+        cls._prompts = None
 
     @classmethod
     def _load_prompts(cls, config):
