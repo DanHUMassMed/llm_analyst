@@ -4,12 +4,13 @@ import pytest
 
 from tests.utils_for_pytest import dump_test_results, get_resource_file_path
 from llm_analyst.core.research_state import ResearchState
+from llm_analyst.core.config import ReportType, DataSource
 
 def setup_research_state():
     active_research_topic = "This is the active topic"
-    report_type           = "report_type"
+    report_type           = ReportType.ResearchReport
     agent_type            = "This is the Agent Type"   
-    data_source            = "web"                             
+    data_source            = DataSource.Web          
     agents_role_prompt    = "This is the Agent Prompt"                          
     main_research_topic   = "Main Research topic"                                
     visited_urls          = ['https://example.com', 'https://another.com'] 

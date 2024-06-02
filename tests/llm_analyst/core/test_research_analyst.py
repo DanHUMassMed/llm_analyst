@@ -7,10 +7,12 @@ import pytest
 
 from llm_analyst.core.research_analyst import LLMAnalyst
 from llm_analyst.core.research_state import ResearchState
-from llm_analyst.core.config import Config
+from llm_analyst.core.config import Config, DataSource, ReportType
 
 CONFIG_PARAMS = {
     "internet_search" :"ddg_search",
+    "llm_provider"    :"openai",
+    "llm_model"       :"gpt-3.5-turbo",
     "max_iterations"  :3,
     "llm_temperature" :0,
     "max_subtopics"   :3
@@ -30,9 +32,12 @@ def setup_research_state(function_name):
 async def test_analyst_init():
     """Test the init method"""
     function_name = inspect.currentframe().f_code.co_name
-    llm_analyst, research_state = setup_research_state("tst_research_state_4")
-      
-    # actual_result.dump(test_json_file_path)
+    llm_analyst, research_state = setup_research_state("tst_research_state_1")
+    #test_json_file_path = get_resource_file_path("tst_research_state_1.json")
+    #llm_analyst.dump(test_json_file_path)
+    assert llm_analyst.data_source == DataSource.Web
+    assert llm_analyst.report_type == ReportType.ResearchReport
+    #actual_result.dump(test_json_file_path)
     # Assertion: Check that the function returns the expected result
     assert research_state.dump() == llm_analyst.dump()
     

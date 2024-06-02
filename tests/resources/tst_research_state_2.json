@@ -1,10 +1,15 @@
 {
     "active_research_topic": "This is the active topic",
-    "report_type": "report_type",
+    "report_type": {
+        "__enum__": "ReportType.ResearchReport"
+    },
     "agent_type": "This is the Agent Type",
-    "data_source": "web",
+    "data_source": {
+        "__enum__": "DataSource.Web"
+    },
     "agents_role_prompt": "This is the Agent Prompt",
     "main_research_topic": "Main Research topic",
+    "custom_search_urls": [],
     "visited_urls": [
         "https://example.com",
         "https://another.com"

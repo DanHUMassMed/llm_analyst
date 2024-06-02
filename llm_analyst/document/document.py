@@ -44,15 +44,15 @@ class DocumentLoader:
         ret_data = []
         try:
             loader_dict = {
-                "pdf": PyMuPDFLoader(file_path),
-                "txt": TextLoader(file_path),
-                "doc": UnstructuredWordDocumentLoader(file_path),
+                "pdf":  PyMuPDFLoader(file_path),
+                "txt":  TextLoader(file_path),
+                "doc":  UnstructuredWordDocumentLoader(file_path),
                 "docx": UnstructuredWordDocumentLoader(file_path),
                 "pptx": UnstructuredPowerPointLoader(file_path),
-                "csv": UnstructuredCSVLoader(file_path, mode="elements"),
-                "xls": UnstructuredExcelLoader(file_path, mode="elements"),
+                "csv":  UnstructuredCSVLoader(file_path, mode="elements"),
+                "xls":  UnstructuredExcelLoader(file_path, mode="elements"),
                 "xlsx": UnstructuredExcelLoader(file_path, mode="elements"),
-                "md": UnstructuredMarkdownLoader(file_path)
+                "md":   UnstructuredMarkdownLoader(file_path)
             }
 
             loader = loader_dict.get(file_extension, None)

@@ -71,7 +71,7 @@ class LLMWriter(ResearchState):
                                                      research_summary=self.initial_findings,
                                                      datetime_now = datetime.now().strftime('%B %d, %Y'))
             report_intro = await self.llm_provider.get_chat_response(self.agents_role_prompt, report_introduction_prompt)
-            logging.debug("write_introduction response = %s",report_intro)
+            logging.debug("PROMPT write_introduction response = %s",report_intro)
             
         except Exception as e:
             logging.error("Error in generating report introduction: %s",e)

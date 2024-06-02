@@ -41,6 +41,7 @@ class ContextCompressor:
         self.kwargs = kwargs
         self.embeddings = embeddings
         self.similarity_threshold = 0.38
+        self.unique_documets_visited = set()
 
     def _get_contextual_retriever(self):
         splitter             = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
@@ -55,8 +56,10 @@ class ContextCompressor:
                           f"Title: {doc.metadata.get('title')}\n"
                           f"Content: {doc.page_content}\n"
                           for i, doc in enumerate(docs) if i < top_n)
-
+        
     def get_context(self, query, max_results=5):
         compressed_docs = self._get_contextual_retriever()
         relevant_docs = compressed_docs.get_relevant_documents(query)
+        self.unique_documets_visited.update(doc.metadata.get('source') 
+                                            for i, doc in enumerate(relevant_docs) if i < max_results)
         return self._pretty_print_docs(relevant_docs, max_results)

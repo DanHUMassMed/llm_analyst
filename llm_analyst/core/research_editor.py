@@ -28,18 +28,11 @@ class LLMEditor(ResearchState):
 
         for subtopic in subtopics:
             print(f"Researching {subtopic}")
-            subtopic_assistant = LLMAnalyst(
-                active_research_topic = subtopic,
-                report_type = "subtopic_report",
-                main_research_topic = primary_research.active_research_topic,
-                agents_role_prompt =  primary_research.agents_role_prompt,
-                agent_type = primary_research.agent_type,
-                visited_urls = primary_research.visited_urls,
-                research_findings = primary_research.research_findings,
-                report_headings = primary_research.report_headings,
-                onfig = self.cfg
-            )
-            
+            subtopic_assistant = LLMAnalyst(config = self.cfg, **primary_research.dump())
+            subtopic_assistant.active_research_topic = subtopic
+            subtopic_assistant.report_type = ReportType.SubtopicReport
+            subtopic_assistant.main_research_topic = primary_research.active_research_topic
+                        
             subtopic_research = await subtopic_assistant.conduct_research()
             subtopic_report = await subtopic_assistant.write_report()
 

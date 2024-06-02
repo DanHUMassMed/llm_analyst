@@ -54,5 +54,5 @@ async def test_write_table_of_contents():
 async def test_write_references():
     function_name = inspect.currentframe().f_code.co_name
     llm_writer, research_state = setup_research_state("tst_research_state_5")
-    toc = await llm_writer.write_references()
-    dump_test_results(function_name, toc, to_json=False)
+    references = await llm_writer.write_references()
+    dump_test_results(function_name, references, to_json=False)
