@@ -113,7 +113,7 @@ class LLMAnalyst(ResearchState):
         document_data = await DocumentLoader(self.cfg.local_store_dir).load()
         context = []
         # Generate Sub-Queries including original query
-        sub_queries = await self._get_sub_queries() 
+        sub_queries = await self._get_sub_queries()
         
         # Using asyncio.gather to process the sub_queries asynchronously
         context = await asyncio.gather(*[self._process_local_store_query(sub_query, document_data) for sub_query in sub_queries])

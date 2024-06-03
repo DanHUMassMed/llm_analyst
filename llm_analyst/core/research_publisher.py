@@ -1,13 +1,7 @@
-import asyncio
-import time
-import importlib
 from datetime import datetime
-import json
-import warnings
 import aiofiles
 import urllib
 import uuid
-import importlib.util
 import os
 
 from md2pdf.core import md2pdf
@@ -36,7 +30,10 @@ class LLMPublisher(ResearchState):
         self.prompts = Prompts(self.cfg)
   
     def _get_file_path(self):
-        file_nm = uuid.uuid4().hex
+        #file_nm = uuid.uuid4().hex
+        now = datetime.now()
+        formatted_date_time = now.strftime('%Y-%m-%d-%H%M%S%f')[:-2]
+        file_nm = f"Research-{formatted_date_time}"
         file_path = os.path.join(self.cfg.report_out_dir, f"{file_nm}")
         if file_path[0]=='~':
             file_path = os.path.expanduser(file_path)

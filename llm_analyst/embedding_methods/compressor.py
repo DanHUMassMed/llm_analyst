@@ -16,9 +16,7 @@ class SearchAPIRetriever(BaseRetriever):
     """Search API retriever."""
     pages: List[Dict] = []
 
-    def _get_relevant_documents(
-        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
-    ) -> List[Document]:
+    def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun) -> List[Document]:
 
         docs = [
             Document(
