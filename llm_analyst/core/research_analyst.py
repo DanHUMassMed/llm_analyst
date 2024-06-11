@@ -10,7 +10,8 @@ from llm_analyst.core.exceptions import LLMAnalystsException
 from llm_analyst.embedding_methods.compressor import ContextCompressor
 from llm_analyst.utils.app_logging import logging
 from llm_analyst.core.research_state import ResearchState
-from llm_analyst.document.document import DocumentLoader
+from llm_analyst.documents.document import DocumentLoader 
+from llm_analyst.documents.vector_store import VectorStore
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 from typing import List
@@ -110,19 +111,22 @@ class LLMAnalyst(ResearchState):
             1. Find a list of related subtopic to search. (LLM)
             2. For each topic exctract similar data from local store
         """
-        document_data = await DocumentLoader(self.cfg.local_store_dir).load()
+        
+        vector_store = await VectorStore.create(self.cfg.cache_dir, self.cfg.local_store_dir)
         context = []
         # Generate Sub-Queries including original query
         sub_queries = await self._get_sub_queries()
         
         # Using asyncio.gather to process the sub_queries asynchronously
-        context = await asyncio.gather(*[self._process_local_store_query(sub_query, document_data) for sub_query in sub_queries])
+        context = await asyncio.gather(*[self._process_local_store_query(sub_query, vector_store) for sub_query in sub_queries])
 
         return context
 
-    async def _process_local_store_query(self, sub_query, document_data):
+    async def _process_local_store_query(self, sub_query, vector_store):
         """Takes in a sub query and gathers context from the local store."""
-        context_compressor = ContextCompressor(documents=document_data, embeddings=self.cfg.embedding_provider)
+        # document_data = await self._get_docs_by_query(sub_query)
+        pages = await vector_store.retrieve_pages_for_query(sub_query)
+        context_compressor = ContextCompressor(documents=pages, embeddings=self.cfg.embedding_provider)
         content = context_compressor.get_context(sub_query, max_results = 8)
         await self._keep_unique_urls(context_compressor.unique_documets_visited)
         return content

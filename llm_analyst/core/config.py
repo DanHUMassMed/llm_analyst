@@ -108,6 +108,12 @@ class Config:
                 env_val     = os.getenv(env_var) if env_var else None
                 value        = env_val if env_val else default_val
                 
+            if key.endswith("_dir") and value:
+                # If this is a directory key check if special charater ~ is used
+                # and if so exapnd the ~ to the full home dir path
+                if value[0]=='~':
+                    value = os.path.expanduser(value)
+                
             if key == "internet_search" and value is not None:
                 value = self._get_search_method(value)
 
