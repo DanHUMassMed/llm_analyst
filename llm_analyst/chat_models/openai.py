@@ -6,28 +6,23 @@ from llm_analyst.core.exceptions import LLMAnalystsException
 
 class OPENAI_Model:
 
-    def __init__(
-        self,
-        model,
-        temperature,
-        max_tokens
-    ):
+    def __init__(self, model, temperature, max_tokens):
         try:
             api_key = os.environ["OPENAI_API_KEY"]
         except:
-            raise LLMAnalystsException("OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.")
+            raise LLMAnalystsException(
+                "OpenAI API key not found. Please set the OPENAI_API_KEY environment variable."
+            )
 
         self.llm = ChatOpenAI(
-            model = model,
-            temperature = temperature,
-            max_tokens = max_tokens,
-            api_key = api_key
+            model=model, temperature=temperature, max_tokens=max_tokens, api_key=api_key
         )
 
     async def get_chat_response(self, llm_system_prompt, llm_user_prompt, stream=False):
-        messages=[
+        messages = [
             {"role": "system", "content": llm_system_prompt},
-            {"role": "user", "content": f"task: {llm_user_prompt}"}]
+            {"role": "user", "content": f"task: {llm_user_prompt}"},
+        ]
 
         response = ""
         if not stream:
@@ -51,5 +46,5 @@ class OPENAI_Model:
                 if "\n" in paragraph:
                     print(f"{paragraph}")
                     paragraph = ""
-                    
+
         return response

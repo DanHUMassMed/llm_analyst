@@ -9,24 +9,24 @@ from htmldocx import HtmlToDocx
 from llm_analyst.core.config import Config, ReportType
 from llm_analyst.core.prompts import Prompts
 from llm_analyst.utils.utilities import get_resource_path
-from llm_analyst.utils.app_logging import trace_log,logging
+from llm_analyst.utils.app_logging import trace_log, logging
 from llm_analyst.core.research_state import ResearchState, DataSource
-
 
 
 class LLMWriter(ResearchState):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        
-        self.cfg = kwargs.get('config', Config())
-        
+
+        self.cfg = kwargs.get("config", Config())
+
         self.llm_provider = self.cfg.llm_provider(
-            model = self.cfg.llm_model,
-            temperature = self.cfg.llm_temperature,
-            max_tokens = self.cfg.llm_token_limit)
-        
+            model=self.cfg.llm_model,
+            temperature=self.cfg.llm_temperature,
+            max_tokens=self.cfg.llm_token_limit,
+        )
+
         self.prompts = Prompts(self.cfg)
-            
+
     def _extract_headers(self):
         # Function to extract headers from markdown text
 
@@ -36,11 +36,13 @@ class LLMWriter(ResearchState):
 
         stack = []  # Initialize stack to keep track of nested headers
         for line in lines:
-            if line.startswith("<h") and len(line) > 1:  # Check if the line starts with an HTML header tag
-                #level = int(line[2])  # Extract header level
+            if (
+                line.startswith("<h") and len(line) > 1
+            ):  # Check if the line starts with an HTML header tag
+                # level = int(line[2])  # Extract header level
                 level = line[2] if line[2].isdigit() else 0
                 header_text = line[
-                    line.index(">") + 1: line.rindex("<")
+                    line.index(">") + 1 : line.rindex("<")
                 ]  # Extract header text
 
                 # Pop headers from the stack with higher or equal level
@@ -62,19 +64,23 @@ class LLMWriter(ResearchState):
                 stack.append(header)  # Push header onto the stack
 
         return headers  # Return the list of headers
-    
+
     async def write_introduction(self):
         report_intro = ""
         try:
-            report_introduction_prompt = self.prompts.get_prompt("report_introduction",
-                                                     question=self.active_research_topic,
-                                                     research_summary=self.initial_findings,
-                                                     datetime_now = datetime.now().strftime('%B %d, %Y'))
-            report_intro = await self.llm_provider.get_chat_response(self.agents_role_prompt, report_introduction_prompt)
-            logging.debug("PROMPT write_introduction response = %s",report_intro)
-            
+            report_introduction_prompt = self.prompts.get_prompt(
+                "report_introduction",
+                question=self.active_research_topic,
+                research_summary=self.initial_findings,
+                datetime_now=datetime.now().strftime("%B %d, %Y"),
+            )
+            report_intro = await self.llm_provider.get_chat_response(
+                self.agents_role_prompt, report_introduction_prompt
+            )
+            logging.debug("PROMPT write_introduction response = %s", report_intro)
+
         except Exception as e:
-            logging.error("Error in generating report introduction: %s",e)
+            logging.error("Error in generating report introduction: %s", e)
 
         return report_intro
 
@@ -95,14 +101,14 @@ class LLMWriter(ResearchState):
 
             # Extract headers from markdown text
             headers = self._extract_headers()
-            toc = "## Table of Contents\n\n" 
+            toc = "## Table of Contents\n\n"
             toc += generate_table_of_contents(headers)  # Generate table of contents
 
             return toc  # Return the generated table of contents
 
         except Exception as e:
-            logging.error("Error in generating table_of_contents: %s",e)
-            return "" 
+            logging.error("Error in generating table_of_contents: %s", e)
+            return ""
 
     async def write_references(self):
         """
@@ -118,5 +124,3 @@ class LLMWriter(ResearchState):
         except Exception as e:
             print(f"Encountered exception in adding source urls : {e}")
             return ""
-        
- 

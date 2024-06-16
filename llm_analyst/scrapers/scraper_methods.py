@@ -9,7 +9,6 @@ import re
 import os
 
 
-
 def arxiv_scraper(link):
     query = link.split("/")[-1]
     retriever = ArxivRetriever(load_max_docs=2, doc_content_chars_max=None)
@@ -17,13 +16,15 @@ def arxiv_scraper(link):
     # Just pulling the abstract
     return docs[0].page_content
 
+
 def pdf_scraper(link):
     loader = PyMuPDFLoader(link)
     docs = loader.load()
-    content =""
+    content = ""
     for doc in docs:
         content += doc.page_content
     return content
+
 
 def bs_scraper(link):
     response = requests.get(link, timeout=10)
@@ -39,6 +40,7 @@ def bs_scraper(link):
     document.page_content = re.sub("\n\n+", "\n", document.page_content)
     return document.page_content
 
+
 def web_scraper(link):
     try:
         loader = WebBaseLoader(link)
@@ -53,5 +55,3 @@ def web_scraper(link):
     except Exception as e:
         print("Error! : " + str(e))
         return ""
-
-
