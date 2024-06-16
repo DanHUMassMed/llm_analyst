@@ -57,7 +57,8 @@ class ContextCompressor:
         
     def get_context(self, query, max_results=5):
         compressed_docs = self._get_contextual_retriever()
-        relevant_docs = compressed_docs.get_relevant_documents(query)
-        self.unique_documets_visited.update(doc.metadata.get('source') 
+        #relevant_docs = compressed_docs.get_relevant_documents(query)
+        relevant_docs = compressed_docs.invoke(query)
+        self.unique_documets_visited.update(doc.metadata.get('source')
                                             for i, doc in enumerate(relevant_docs) if i < max_results)
         return self._pretty_print_docs(relevant_docs, max_results)

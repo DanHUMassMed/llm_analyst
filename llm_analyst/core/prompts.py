@@ -63,7 +63,7 @@ class Prompts:
             
             
     def get_prompt(self, prompt_nm, **kwargs):
-        """Get the formated prompt after appling the passed in key words if required"""
+        """Get the formatted prompt after applying the passed in key words if required"""
         prompt = self._prompts.get(prompt_nm, None)
         
         if prompt and kwargs:
