@@ -7,6 +7,14 @@ import requests
 import uuid
 import re
 import os
+import importlib
+from concurrent.futures.thread import ThreadPoolExecutor
+from pyvirtualdisplay import Display
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from bs4 import BeautifulSoup
 
 
 def arxiv_scraper(link):
@@ -40,6 +48,43 @@ def bs_scraper(link):
     document.page_content = re.sub("\n\n+", "\n", document.page_content)
     return document.page_content
 
+def cell_selenium_scraper(link):
+    # Start virtual display
+    display = Display(visible=0, size=(800, 600))
+    display.start()
+
+    # Set up the browser
+    options = webdriver.FirefoxOptions()
+    options.add_argument('--headless')
+    browser = webdriver.Firefox(options=options)
+    browser.get(link)
+
+    try:
+        # Wait for the cookie consent button to be present and clickable
+        cookie_button = WebDriverWait(browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Accept')]"))
+        )
+        # Click the cookie consent button
+        cookie_button.click()
+    except Exception as e:
+        print("No cookie consent button found or an error occurred:", e)
+
+    # Get the whole web page content
+    page_source = browser.page_source
+    soup = BeautifulSoup(page_source, 'html.parser')
+
+    # Extract text content and print it
+    text_content = soup.get_text()
+    pattern = r"\s{3,}"
+    text_content = re.sub(pattern, "  ", text_content)
+            
+    # Clean up
+    browser.quit()
+    display.stop()
+
+    return text_content
+
+
 
 def web_scraper(link):
     try:
@@ -50,8 +95,56 @@ def web_scraper(link):
         for doc in docs:
             content += doc.page_content
 
+        pattern = r"\s{3,}"
+        content = re.sub(pattern, "  ", content)
         return content
 
     except Exception as e:
         print("Error! : " + str(e))
         return ""
+
+#################################################################################
+
+def scrape_urls(urls):
+    """
+    Given a list of URLs
+    1. Determine an appropriate scraper based on URL content
+    2. For each URL Scrape the website and aggragate the content into a list of strings
+        one for each site
+    """
+
+    def extract_data_from_link(link):
+        if link.endswith(".pdf"):
+            scraper_nm = "pdf_scraper"
+        elif "arxiv.org" in link:
+            scraper_nm = "arxiv_scraper"
+        elif "cell.com" in link:
+            scraper_nm = "cell_selenium_scraper"
+        else:
+            #scraper_nm = "bs_scraper"
+            scraper_nm = "web_scraper"
+
+        content = ""
+        try:
+            module_nm = "llm_analyst.scrapers.scraper_methods"
+            module = importlib.import_module(module_nm)
+            scrape_content = getattr(module, scraper_nm)
+            content = scrape_content(link)
+
+            if len(content) < 100:
+                return {"url": link, "raw_content": None}
+            return {"url": link, "raw_content": content}
+        except Exception:
+            return {"url": link, "raw_content": None}
+
+    content_list = []
+    try:
+        with ThreadPoolExecutor(max_workers=20) as executor:
+            contents = executor.map(extract_data_from_link, urls)
+        content_list = [
+            content for content in contents if content["raw_content"] is not None
+        ]
+
+    except Exception as e:
+        print(f"Error in scrape_urls: {e}")
+    return content_list

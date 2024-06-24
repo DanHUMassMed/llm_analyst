@@ -29,7 +29,7 @@ async def test_load_documents():
     function_name = inspect.currentframe().f_code.co_name
     local_store_dir = get_resource_file_path("tst_documents")
     document_loader = DocumentLoader(local_store_dir)
-    document = await document_loader.load_documents()
+    document = await document_loader.load_local_documents()
     assert len(document)== 31
     
     dump_test_results(function_name, document,to_json=False)

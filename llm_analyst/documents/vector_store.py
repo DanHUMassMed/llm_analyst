@@ -13,10 +13,11 @@ from llm_analyst.utils.app_logging import trace_log, logging
 
 class VectorStore:
 
-    def __init__(self, cache_directory, local_data_directory):
+    def __init__(self, cache_directory, local_data_directory=None):
         self.cache_directory = cache_directory
         self.persist_directory = f"{cache_directory}/chroma_db"
         self.local_data_directory = local_data_directory
+        self.local_db_hash = self._stored_db_hash()
 
         model_name = "sentence-transformers/all-MiniLM-l6-v2"
         model_kwargs = {"device": "cpu"}
@@ -26,39 +27,57 @@ class VectorStore:
             model_kwargs=model_kwargs,
             encode_kwargs=encode_kwargs,
         )
-        self.local_db_hash = self._local_db_hash()
-        self.vector_db = None
-
-    async def async_init(self):
-        # Asynchronous initialization
-        if self.local_db_hash == self._stored_db_hash():
-            logging.debug("Using local stored vector db")
-            self.vector_db = Chroma(
+        
+        if not os.path.exists(self.persist_directory):
+            os.makedirs(self.persist_directory)
+        self.vector_db = Chroma(
                 persist_directory=self.persist_directory,
                 embedding_function=self.embedding_model,
             )
-        else:
-            document_loader = DocumentLoader(self.local_data_directory)
-            documents = await document_loader.load_documents()
-            if not documents:
-                raise LLMAnalystsException(
-                    f"ERROR: No Documents loaded! Check the config local_data_directory {self.local_data_directory}"
-                )
-            text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-            chunked_documents = text_splitter.split_documents(documents)
-            self.vector_db = await Chroma.afrom_documents(
-                chunked_documents,
-                self.embedding_model,
-                persist_directory=self.persist_directory,
-            )
-            self.__store_db_hash()
+            
+    def reset_vector_store_db(self):
+            self.vector_db.delete_collection()
+        
+    async def async_init(self):
+        # Asynchronous initialization
+        if self.local_data_directory:
+            local_db_hash = self._local_db_hash()
+            if local_db_hash != self.local_db_hash:
+                self.local_db_hash = local_db_hash
+                document_loader = DocumentLoader(self.local_data_directory)
+                documents = await document_loader.load_local_documents()
+                if not documents:
+                    raise LLMAnalystsException(
+                        f"ERROR: No Documents loaded! Check the config local_data_directory {self.local_data_directory}"
+                    )
+                text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+                chunked_documents = text_splitter.split_documents(documents)
+                self.vector_db = await Chroma.afrom_documents(
+                                                    chunked_documents,
+                                                    self.embedding_model,
+                                                    persist_directory=self.persist_directory,
+                                                )
+                self.__store_db_hash()
+
+            
 
     @classmethod
-    async def create(cls, cache_directory, local_data_directory):
+    async def create(cls, cache_directory, local_data_directory=None):
         instance = cls(cache_directory, local_data_directory)
         await instance.async_init()
         return instance
 
+    async def add_documents(self, documents):
+        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        print(f"type {type(documents)}")
+        chunked_documents = text_splitter.split_documents(documents)
+        
+        # for chunked_doc in chunked_documents:
+        #     print(f"type {type(chunked_doc)}")
+        #     await self.vector_db.aadd_documents(chunked_doc)
+        
+
+    
     def __compute_hash(self, directory_path):
         """Compute a single SHA-256 hash for the entire directory."""
         hasher = hashlib.sha256()

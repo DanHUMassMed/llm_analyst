@@ -1,21 +1,14 @@
 import asyncio
-import importlib
 from datetime import datetime
 import json
-import warnings
-from concurrent.futures.thread import ThreadPoolExecutor
 from llm_analyst.core.config import Config, ReportType, DataSource
 from llm_analyst.core.prompts import Prompts
 from llm_analyst.core.exceptions import LLMAnalystsException
 from llm_analyst.embedding_methods.compressor import ContextCompressor
 from llm_analyst.utils.app_logging import logging
 from llm_analyst.core.research_state import ResearchState
-from llm_analyst.documents.document import DocumentLoader
 from llm_analyst.documents.vector_store import VectorStore
-from langchain.output_parsers import PydanticOutputParser
-from langchain.prompts import PromptTemplate
-from typing import List
-from pydantic import BaseModel, Field
+from llm_analyst.scrapers.scraper_methods import scrape_urls
 
 
 class LLMAnalyst(ResearchState):
@@ -158,7 +151,7 @@ class LLMAnalyst(ResearchState):
         Scrapes and compresses the context from the given urls
         """
         new_search_urls = await self._keep_unique_urls(self.custom_search_urls)
-        scraped_sites = self._scrape_urls(new_search_urls)
+        scraped_sites = scrape_urls(new_search_urls)
         return await self._get_similar_content_by_query(
             self.active_research_topic, scraped_sites
         )
@@ -280,89 +273,6 @@ class LLMAnalyst(ResearchState):
 
         return sub_queries
 
-    # async def select_subtopics(self, subtopics: list = []) -> list:
-    #     """Used for detailed research
-    #        Select related subtopics from the main research topic
-    #        Note: Here we are esentially defining an "outline" for the research to be conducted
-    #     """
-    #     class Subtopic(BaseModel):
-    #         task: str = Field(description="Task name", min_length=1)
-
-    #     class Subtopics(BaseModel):
-    #         subtopics: List[Subtopic] = []
-
-    #     try:
-    #         parser = PydanticOutputParser(pydantic_object=Subtopics)
-
-    #         subtopic_prompt_template = self.prompts.get_prompt("subtopics_prompt")
-
-    #         prompt = PromptTemplate(
-    #             template=subtopic_prompt_template,
-    #             input_variables=["task", "data", "subtopics", "max_subtopics"],
-    #             partial_variables={
-    #                 "format_instructions": parser.get_format_instructions()},
-    #         )
-    #         logging.debug("PROMPT select_subtopics prompt= %s", prompt)
-    #         logging.debug("PROMPT select_subtopics format_instructions= %s", parser.get_format_instructions())
-    #         model = self.llm_provider.llm
-
-    #         chain = prompt | model | parser
-
-    #         output = chain.invoke({
-    #             "task": self.active_research_topic,
-    #             "data": self.research_findings,
-    #             "subtopics": subtopics,
-    #             "max_subtopics": self.cfg.max_subtopics
-    #         })
-    #         subtopics_dict =  output.dict()["subtopics"]
-    #         subtopics = [subtopic['task'] for subtopic in subtopics_dict]
-    #         logging.debug("PROMPT select_subtopics output=%s", output)
-    #     except Exception as e:
-    #         logging.error("Error in select_subtopics %s", e)
-
-    #     return subtopics
-
-    def _scrape_urls(self, urls):
-        """
-        Given a list of URLs
-        1. Determine an appropriate scraper based on URL content
-        2. For each URL Scrape the website and aggragate the content into a list of strings
-           one for each site
-        """
-
-        def extract_data_from_link(link):
-            if link.endswith(".pdf"):
-                scraper_nm = "pdf_scraper"
-            elif "arxiv.org" in link:
-                scraper_nm = "arxiv_scraper"
-            else:
-                scraper_nm = "bs_scraper"
-
-            content = ""
-            try:
-                module_nm = "llm_analyst.scrapers.scraper_methods"
-                module = importlib.import_module(module_nm)
-                scrape_content = getattr(module, scraper_nm)
-                content = scrape_content(link)
-
-                if len(content) < 100:
-                    return {"url": link, "raw_content": None}
-                return {"url": link, "raw_content": content}
-            except Exception:
-                return {"url": link, "raw_content": None}
-
-        content_list = []
-        try:
-            with ThreadPoolExecutor(max_workers=20) as executor:
-                contents = executor.map(extract_data_from_link, urls)
-            content_list = [
-                content for content in contents if content["raw_content"] is not None
-            ]
-
-        except Exception as e:
-            print(f"Error in scrape_urls: {e}")
-        return content_list
-
     async def _scrape_sites_by_query(self, sub_query):
         """Given a sub_query
         1. Call the configured internet search provider and retrieve a list of URLs
@@ -375,7 +285,7 @@ class LLMAnalyst(ResearchState):
         new_search_urls = await self._keep_unique_urls(
             [url.get("href") for url in search_results]
         )
-        scraped_content_results = self._scrape_urls(new_search_urls)
+        scraped_content_results = scrape_urls(new_search_urls)
         return scraped_content_results
 
     async def _get_similar_content_by_query(self, query, pages):
@@ -422,7 +332,6 @@ class LLMAnalyst(ResearchState):
             )
 
         try:
-
             chat_response = await self.llm_provider.get_chat_response(
                 self.agents_role_prompt, report_prompt
             )

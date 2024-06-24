@@ -1,6 +1,6 @@
 import logging
 
-logging.basicConfig(filename="llm_analyst.log", level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("asyncio").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)

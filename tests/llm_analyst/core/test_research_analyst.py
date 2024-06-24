@@ -87,15 +87,6 @@ async def test_get_sub_queries():
     dump_test_results(function_name, actual_result)
 
 
-def test_scrape_urls():
-    function_name = inspect.currentframe().f_code.co_name
-    llm_analyst, research_state = setup_research_state("tst_research_state_4")
-    
-    actual_result = llm_analyst._scrape_urls(list(research_state.visited_urls)[:3])
-    
-    # Just check that you doe get results
-    assert len(actual_result) >0
-    dump_test_results(function_name, actual_result)
 
 @pytest.mark.asyncio
 async def test_keep_unique_urls():
