@@ -1,16 +1,17 @@
+"""
+This module provides the `DocumentLoader` class for loading and processing 
+documents from local paths and URLs.
+"""
 import asyncio
 import os
 import re
-from llm_analyst.scrapers.scraper_methods import scrape_urls
+
 from langchain_community.document_loaders import (
-    PyMuPDFLoader,
-    TextLoader,
-    UnstructuredCSVLoader,
-    UnstructuredExcelLoader,
-    UnstructuredMarkdownLoader,
-    UnstructuredPowerPointLoader,
-    UnstructuredWordDocumentLoader,
-)
+    PyMuPDFLoader, TextLoader, UnstructuredCSVLoader, UnstructuredExcelLoader,
+    UnstructuredMarkdownLoader, UnstructuredPowerPointLoader,
+    UnstructuredWordDocumentLoader)
+
+from llm_analyst.scrapers.scraper_methods import scrape_urls
 
 
 class DocumentLoader:

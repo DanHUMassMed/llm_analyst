@@ -1,4 +1,15 @@
-""" Methods for searching the internet"""
+"""
+This module provides various search functions to interact with different search engines and aggregate
+the results. The search functions utilize APIs from Tavily, Serper, SerpAPI, DuckDuckGo, Google, and Bing.
+
+Functions:
+    tavily_search(query, max_results=7): Searches using Tavily search engine.
+    serper_search(query, max_results=7): Searches using Serper API.
+    serp_api_search(query, max_results=7): Searches using SerpAPI.
+    ddg_search(query, max_results=5): Searches using DuckDuckGo.
+    google_search(query, max_results=7): Searches using Google Custom Search API.
+    bing_search(query, max_results=7): Searches using Bing Search API.
+""" 
 
 import os
 import json
@@ -44,7 +55,8 @@ def tavily_search(query, max_results=7):
 def serper_search(query, max_results=7):
     """Fast and Cheap Google Search API
     As of May 2024 Serper has no Free tier
-    but does allow 2,500 Free searches before you must pay"""
+    but does allow 2,500 Free searches before you must pay
+    """
     search_response = []
     try:
         api_key = os.environ["SERPER_API_KEY"]
@@ -129,7 +141,11 @@ def serp_api_search(query, max_results=7):
 def ddg_search(query, max_results=5):
     """DuckDuckGo is a free private search engine.
     As of May 2024 DuckDuckGo is Free not search limits
-    https://duckduckgo.com/"""
+    https://duckduckgo.com/
+    
+    NOTE: The results have been very good and I have been 
+    using this as the default for much of the work
+    """
     search_response = []
     try:
         ddg = DDGS()

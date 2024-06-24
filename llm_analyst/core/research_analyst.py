@@ -1,3 +1,7 @@
+"""This module defines the `LLMAnalyst` class, which extends the `ResearchState` class. 
+The `LLMAnalyst` class is responsible for conducting research using a Language Model (LLM), 
+managing prompts, and generating reports based on the research findings.
+"""
 import asyncio
 from datetime import datetime
 import json
@@ -26,19 +30,20 @@ class LLMAnalyst(ResearchState):
         self.prompts = Prompts(self.cfg)
 
     async def conduct_research(self):
-        """The Analysts main task is to conduct research"""
+        """The Analysts main task is to conduct research
+        """
         if not (self.agent_type):
             await self.choose_agent()
 
         match self.data_source:
-            case DataSource.Web:
+            case DataSource.WEB:
                 self.research_findings = await self._research_by_internet_search()
-            case DataSource.LocalStore:
+            case DataSource.LOCAL_STORE:
                 self.research_findings = await self._research_by_local_store_search()
-            case DataSource.SelectURLs:
+            case DataSource.SELECT_URLS:
                 self.research_findings = await self._research_by_custom_urls()
             case _:
-                err_msg = "ERROR: Unkown DataSource {self.data_source} in LLMAnalyst.conduct_research()"
+                err_msg = "ERROR: Unknown DataSource {self.data_source} in LLMAnalyst.conduct_research()"
                 logging.error(err_msg)
                 raise LLMAnalystsException(err_msg)
 
@@ -49,12 +54,12 @@ class LLMAnalyst(ResearchState):
 
     async def choose_agent(self, research_topic=None):
         """Given an active_research_topic
-        1. Find an appropriate type of Reseacher (Agent) to do the work
+        1. Find an appropriate type of Researcher (Agent) to do the work
         2. Note: The prompt that is returned is used to guide the LLM
         """
         default_response = {
             "agent_type": "Default Agent",
-            "agents_role_prompt": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text.",
+            "agents_role_prompt": self.prompts.get_prompt("agents_role_prompt"),
             "active_research_topic": self.active_research_topic,
         }
         try:
@@ -82,6 +87,7 @@ class LLMAnalyst(ResearchState):
 
         self.agent_type = chat_response_json["agentType"]
         self.agents_role_prompt = chat_response_json["agentRole"]
+        
         research_state = ResearchState(
             active_research_topic=self.active_research_topic,
             report_type=self.report_type,
@@ -107,7 +113,8 @@ class LLMAnalyst(ResearchState):
         return context
 
     async def _process_internet_query(self, sub_query: str):
-        """Takes in a sub query and scrapes urls based on it and gathers context."""
+        """Takes in a sub query and scrapes urls based on it and gathers context.
+        """
         scraped_sites = await self._scrape_sites_by_query(sub_query)
         content = await self._get_similar_content_by_query(sub_query, scraped_sites)
         return content
@@ -115,7 +122,7 @@ class LLMAnalyst(ResearchState):
     async def _research_by_local_store_search(self):
         """Given an active_research_topic
         1. Find a list of related subtopic to search. (LLM)
-        2. For each topic exctract similar data from local store
+        2. For each topic extract similar data from local store
         """
 
         vector_store = await VectorStore.create(
@@ -136,14 +143,15 @@ class LLMAnalyst(ResearchState):
         return context
 
     async def _process_local_store_query(self, sub_query, vector_store):
-        """Takes in a sub query and gathers context from the local store."""
+        """Takes in a sub query and gathers context from the local store.
+        """
         # document_data = await self._get_docs_by_query(sub_query)
         pages = await vector_store.retrieve_pages_for_query(sub_query)
         context_compressor = ContextCompressor(
             documents=pages, embeddings=self.cfg.embedding_provider
         )
         content = context_compressor.get_context(sub_query, max_results=8)
-        await self._keep_unique_urls(context_compressor.unique_documets_visited)
+        await self._keep_unique_urls(context_compressor.unique_documents_visited)
         return content
 
     async def _research_by_custom_urls(self):
@@ -159,14 +167,14 @@ class LLMAnalyst(ResearchState):
     async def _get_sub_queries(self):
         """
         Given an active_research_topic
-        Request a list of sub queries that could appropraitly answer the active_research_topic
+        Request a list of sub queries that could appropriately answer the active_research_topic
         """
         default_response = []
         sub_queries = None
         try:
             if (
-                self.report_type == ReportType.DetailedReport
-                or self.report_type == ReportType.SubtopicReport
+                self.report_type == ReportType.DETAILED_REPORT
+                or self.report_type == ReportType.SUBTOPIC_REPORT
             ):
                 task = f"{self.main_research_topic} - {self.active_research_topic}"
             else:
@@ -192,13 +200,14 @@ class LLMAnalyst(ResearchState):
                 chat_response, default_response
             )
 
-        if self.report_type != ReportType.SubtopicReport:
+        if self.report_type != ReportType.SUBTOPIC_REPORT:
             sub_queries.append(self.active_research_topic)
 
         return sub_queries
 
     async def _keep_unique_urls(self, url_set_input):
-        """Parse the URLS and remove any duplicates"""
+        """Parse the URLS and remove any duplicates
+        """
         new_urls = []
 
         for url in url_set_input:
@@ -210,8 +219,8 @@ class LLMAnalyst(ResearchState):
 
     async def _extract_json_from_string(self, chat_response, default_response):
         """Helper method
-        In some case the requested JSON response from the LLM is wrapped in explainitory text
-        this method attempts to extract JSON from the LLM ressponse
+        In some case the requested JSON response from the LLM is wrapped in explanatory text
+        this method attempts to extract JSON from the LLM response
         """
         result_json = default_response
         stack = []
@@ -268,7 +277,7 @@ class LLMAnalyst(ResearchState):
                 chat_response, default_response
             )
 
-        if self.report_type != ReportType.SubtopicReport:
+        if self.report_type != ReportType.SUBTOPIC_REPORT:
             sub_queries.append(self.active_research_topic)
 
         return sub_queries
@@ -307,9 +316,10 @@ class LLMAnalyst(ResearchState):
         report_format = "APA"
         datetime_now = datetime.now().strftime("%B %d, %Y")
 
-        if self.report_type == ReportType.CustomReport:
+        if self.report_type == ReportType.CUSTOM_REPORT:
             raise LLMAnalystsException("CUSTOM REPORT Not Implemented")
-        elif self.report_type == ReportType.SubtopicReport:
+        
+        if self.report_type == ReportType.SUBTOPIC_REPORT:
             report_prompt = self.prompts.get_prompt(
                 report_prompt_nm,
                 context=self.research_findings,

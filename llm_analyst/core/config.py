@@ -1,39 +1,39 @@
-""" Configuration Class for LLM Analyst """
+"""
+This module provides a Config class for the LLM Analyst application, 
+enabling configuration management through JSON files and environment variables.
+"""
 
 import importlib.util
 import importlib
 import os
 import json
-from collections import abc
 import keyword
 
 from enum import Enum
 from llm_analyst.core.exceptions import LLMAnalystsException
-from llm_analyst.utils.app_logging import trace_log, logging
+from llm_analyst.utils.app_logging import logging
 from llm_analyst.utils.utilities import get_resource_path
 
 
-## Explore using **kwargs to pass init params to configuration objects
-##"fast_llm_model" :{"default_val":"openai",kwargs"model=gpt-3.5-turbo-16k, temperature="0.55"},
-
 
 class ReportType(Enum):
-    ResearchReport = "research_report"
-    ResourceReport = "resource_report"
-    OutlineReport = "outline_report"
-    CustomReport = "custom_report"
-    DetailedReport = "detailed_report"
-    SubtopicReport = "subtopic_report"
+    RESEARCH_REPORT = "research_report"
+    RESOURCE_REPORT = "resource_report"
+    OUTLINE_REPORT = "outline_report"
+    CUSTOM_REPORT = "custom_report"
+    DETAILED_REPORT = "detailed_report"
+    SUBTOPIC_REPORT = "subtopic_report"
 
 
 class DataSource(Enum):
-    Web = "web"
-    LocalStore = "local_store"
-    SelectURLs = "select_urls"
+    WEB = "web"
+    LOCAL_STORE = "local_store"
+    SELECT_URLS = "select_urls"
 
 
 class Config:
-    """Config class for LLM Analyst."""
+    """Config class for LLM Analyst.
+    """
 
     def __init__(self):
         self.__data = None
@@ -74,7 +74,8 @@ class Config:
 
     # @trace_log
     def _get_config_file(self, config_file_path=None):
-        """Use the default config file override if environment vaiables are set."""
+        """Use the default config file override if environment variables are set.
+        """
         config_json = None
         if not config_file_path:
             config_file_path = os.path.join(get_resource_path(), "llm_analyst.config")
@@ -127,7 +128,8 @@ class Config:
         return config_data
 
     def _get_search_method(self, search_method: str):
-        """Convert the search_method from a string to a callable function."""
+        """Convert the search_method from a string to a callable function.
+        """
         module_name = "llm_analyst.search_methods.internet_search"
         try:
             module = importlib.import_module(module_name)
@@ -141,8 +143,9 @@ class Config:
 
     def _get_llm_model(self, llm_model_module: str):
         """Convert the llm_model_module from a string to a Chat Model Object.
-        NOTE: Currently relying on a Naming Convension for Model Object
+        NOTE: Currently relying on a Naming Convention for Model Object
               UPPERCASE_MODEL_NM+"_Model"
+              
         """
         chat_model = None
         module_name = f"llm_analyst.chat_models.{llm_model_module}"
@@ -159,10 +162,10 @@ class Config:
 
         return chat_model
 
-    def _get_embeddings_provider(self, embeddings_proviver_nm):
-        """Map embeddings_proviver_nm to a Langchain Embeddings Class"""
+    def _get_embeddings_provider(self, embeddings_provider_nm):
+        """Map embeddings_provider_nm to a Langchain Embeddings Class"""
         embeddings = None
-        match embeddings_proviver_nm:
+        match embeddings_provider_nm:
             case "ollama":
                 from langchain_community.embeddings.ollama import OllamaEmbeddings
 
@@ -176,7 +179,7 @@ class Config:
 
                 embeddings = HuggingFaceEmbeddings()
             case _:
-                error_msg = f"IN Config._get_embeddings_provider - Embedding provider not found. [{embeddings_proviver_nm}]"
+                error_msg = f"IN Config._get_embeddings_provider - Embedding provider not found. [{embeddings_provider_nm}]"
                 logging.error(error_msg)
                 raise LLMAnalystsException(error_msg)
 

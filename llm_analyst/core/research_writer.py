@@ -1,16 +1,13 @@
+"""
+This module defines the `LLMWriter` class, which is responsible for writing the introduction, 
+table of contents, and references of a research report using a Language Model (LLM).
+"""
 from datetime import datetime
 import markdown
-
-from md2pdf.core import md2pdf
-import mistune
-from docx import Document
-from htmldocx import HtmlToDocx
-
-from llm_analyst.core.config import Config, ReportType
+from llm_analyst.core.config import Config
 from llm_analyst.core.prompts import Prompts
-from llm_analyst.utils.utilities import get_resource_path
-from llm_analyst.utils.app_logging import trace_log, logging
-from llm_analyst.core.research_state import ResearchState, DataSource
+from llm_analyst.utils.app_logging import logging
+from llm_analyst.core.research_state import ResearchState
 
 
 class LLMWriter(ResearchState):
@@ -40,7 +37,7 @@ class LLMWriter(ResearchState):
                 line.startswith("<h") and len(line) > 1
             ):  # Check if the line starts with an HTML header tag
                 # level = int(line[2])  # Extract header level
-                level = line[2] if line[2].isdigit() else 0
+                level = int(line[2]) if line[2].isdigit() else 0
                 header_text = line[
                     line.index(">") + 1 : line.rindex("<")
                 ]  # Extract header text
@@ -112,7 +109,7 @@ class LLMWriter(ResearchState):
 
     async def write_references(self):
         """
-        This function create a reference section based on kown URLs that have been visited
+        This function create a reference section based on known URLs that have been visited
         """
         try:
             url_markdown = "\n\n\n## References\n\n"

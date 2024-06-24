@@ -1,11 +1,11 @@
 {
     "active_research_topic": "This is the active topic",
     "report_type": {
-        "__enum__": "ReportType.ResearchReport"
+        "__enum__": "ReportType.RESEARCH_REPORT"
     },
     "agent_type": "This is the Agent Type",
     "data_source": {
-        "__enum__": "DataSource.Web"
+        "__enum__": "DataSource.WEB"
     },
     "agents_role_prompt": "This is the Agent Prompt",
     "main_research_topic": "Main Research topic",

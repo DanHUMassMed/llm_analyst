@@ -1,6 +1,11 @@
 {
     "active_research_topic": "What happened in the latest burning man floods?",
-    "report_type": "research_report",
+    "report_type": {
+        "__enum__": "ReportType.RESEARCH_REPORT"
+    },
+    "data_source": {
+        "__enum__": "DataSource.WEB"
+    },
     "agent_type": "\ud83d\udcf0 News Agent",
     "agents_role_prompt": "You are a well-informed AI news analyst assistant. Your primary goal is to provide detailed, accurate, unbiased, and well-structured news reports based on the latest events, including background information, key developments, and potential implications.",
     "main_research_topic": "",

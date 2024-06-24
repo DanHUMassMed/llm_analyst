@@ -1,3 +1,9 @@
+"""
+This module provides an interface for interacting with the Groq models using 
+the `ChatGroq` class from the `langchain_groq` package.
+
+https://groq.com/
+"""
 import os
 
 from langchain_groq import ChatGroq

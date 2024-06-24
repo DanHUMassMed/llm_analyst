@@ -129,6 +129,9 @@
     "- The introduction should be preceded by an H1 heading with a suitable topic for the entire report.\n",
     "- You must include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.\n",
     "Assume that the current date is {datetime_now} if required.\n"
+  ],
+  "agents_role_prompt":[ "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed,",
+     "objective and structured reports on given text."
   ]
 }
 

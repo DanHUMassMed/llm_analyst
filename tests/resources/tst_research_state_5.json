@@ -1,11 +1,11 @@
 {
     "active_research_topic": "I would like to better understand how the metabolism of S-adenosylmethionine is linked to lipid metabolism and stress-responsive gene expression",
     "report_type": {
-        "__enum__": "ReportType.ResearchReport"
+        "__enum__": "ReportType.RESEARCH_REPORT"
     },
     "agent_type": "\ud83e\uddec Biochemistry Agent",
     "data_source": {
-        "__enum__": "DataSource.LocalStore"
+        "__enum__": "DataSource.LOCAL_STORE"
     },
     "agents_role_prompt": "You are a specialized AI biochemistry researcher. Your main task is to conduct in-depth research on biochemical processes, pathways, and interactions, and provide detailed insights into how different molecules, such as S-adenosylmethionine, are linked to lipid metabolism and stress-responsive gene expression.",
     "main_research_topic": "",

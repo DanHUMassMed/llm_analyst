@@ -1,3 +1,11 @@
+"""
+This module provides an interface for interacting with the OpenAI GPT models using 
+the `ChatOpenAI` class from the `langchain_openai` package.
+
+NOTE: Models are added as config resources using a naming convention to maintain 
+compatibility with gpt-researcher. For example: "llm_provider" :"openai" will map to OPENAI_Model
+and instantiate this Class the convention is UPPERCASE_MODEL_NM+"_Model" 
+"""
 import os
 
 from langchain_openai import ChatOpenAI

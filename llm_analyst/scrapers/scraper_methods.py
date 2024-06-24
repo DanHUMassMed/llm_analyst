@@ -1,20 +1,27 @@
-from langchain_community.retrievers.arxiv import ArxivRetriever
-from langchain_community.document_loaders.pdf import PyMuPDFLoader
-from langchain_community.document_loaders.html_bs import BSHTMLLoader
-from langchain_community.document_loaders.web_base import WebBaseLoader
-import requests
+"""
+This module provides various scraping functions to extract content from different types of web links.
+It includes specialized scrapers for arXiv links, PDF files, generic web pages, and pages requiring
+Selenium for dynamic content loading. The main function `scrape_urls` determines the appropriate 
+scraper based on the URL and aggregates the content into a list of strings.
+"""
 
-import uuid
-import re
-import os
 import importlib
+import os
+import re
+import uuid
 from concurrent.futures.thread import ThreadPoolExecutor
+
+import requests
+from bs4 import BeautifulSoup
+from langchain_community.document_loaders.html_bs import BSHTMLLoader
+from langchain_community.document_loaders.pdf import PyMuPDFLoader
+from langchain_community.document_loaders.web_base import WebBaseLoader
+from langchain_community.retrievers.arxiv import ArxivRetriever
 from pyvirtualdisplay import Display
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from bs4 import BeautifulSoup
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 def arxiv_scraper(link):
@@ -35,6 +42,10 @@ def pdf_scraper(link):
 
 
 def bs_scraper(link):
+    """
+    This is a Beautiful Soup Scraper however web_scraper also uses Beautiful Soup
+    and does so more seamlessly.
+    """
     response = requests.get(link, timeout=10)
     temp_file = f"temp_{uuid.uuid4()}.html"
     with open(temp_file, "w", encoding="utf-8") as f:
@@ -48,8 +59,12 @@ def bs_scraper(link):
     document.page_content = re.sub("\n\n+", "\n", document.page_content)
     return document.page_content
 
+
 def cell_selenium_scraper(link):
-    # Start virtual display
+    """
+    Works as a general site scraper however this was implemented specifically 
+    to scrape cell.com sites.
+    """
     display = Display(visible=0, size=(800, 600))
     display.start()
 
@@ -109,7 +124,7 @@ def scrape_urls(urls):
     """
     Given a list of URLs
     1. Determine an appropriate scraper based on URL content
-    2. For each URL Scrape the website and aggragate the content into a list of strings
+    2. For each URL Scrape the website and aggregate the content into a list of strings
         one for each site
     """
 

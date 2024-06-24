@@ -1,8 +1,7 @@
-"""Loads prompts for LLM calls"""
+"""This module provides a Prompts class for loading and managing prompts for LLM (Language Model) calls. 
+The Prompts class implements a singleton pattern to ensure a single instance of prompts 
+is loaded throughout the application."""
 
-import importlib.util
-import importlib
-import os
 import json
 import re
 from llm_analyst.core.exceptions import LLMAnalystsException
@@ -59,7 +58,8 @@ class Prompts:
         return prompts
 
     def print_params(self):
-        """Helper function prints the available prompts and the required params for each"""
+        """Helper function prints the available prompts and the required params for each
+        """
         ret_val = ""
         for prompt_key, prompt_value in self._prompts.items():
             params = self._extract_variables(prompt_value)
@@ -67,7 +67,8 @@ class Prompts:
         return ret_val
 
     def get_prompt(self, prompt_nm, **kwargs):
-        """Get the formatted prompt after applying the passed in key words if required"""
+        """Get the formatted prompt after applying the passed in key words if require
+        """
         prompt = self._prompts.get(prompt_nm, None)
 
         if prompt and kwargs:

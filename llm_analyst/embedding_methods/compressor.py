@@ -1,4 +1,7 @@
 """
+Search API retriever that fetches relevant documents based on a query.
+
+NOTE: Helpful URLS for understanding and expanding the notions expressed in this code
 https://blog.langchain.dev/improving-document-retrieval-with-contextual-compression/
 https://medium.com/@SrGrace_/contextual-compression-langchain-llamaindex-7675c8d1f9eb
 """
@@ -47,7 +50,7 @@ class ContextCompressor:
         self.kwargs = kwargs
         self.embeddings = embeddings
         self.similarity_threshold = 0.38
-        self.unique_documets_visited = set()
+        self.unique_documents_visited = set()
 
     def _get_contextual_retriever(self):
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
@@ -76,7 +79,7 @@ class ContextCompressor:
         compressed_docs = self._get_contextual_retriever()
         # relevant_docs = compressed_docs.get_relevant_documents(query)
         relevant_docs = compressed_docs.invoke(query)
-        self.unique_documets_visited.update(
+        self.unique_documents_visited.update(
             doc.metadata.get("source")
             for i, doc in enumerate(relevant_docs)
             if i < max_results

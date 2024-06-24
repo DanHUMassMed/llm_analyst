@@ -1,6 +1,13 @@
+"""
+This module configures logging settings for various libraries and provides a decorator
+function to trace the entry and exit points of other functions.
+"""
+
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
+
+# The below provide lots of DEBUG logging that is not desired
 logging.getLogger("asyncio").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)

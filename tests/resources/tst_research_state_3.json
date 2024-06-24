@@ -1,10 +1,15 @@
 {
     "active_research_topic": "This is the active topic",
-    "report_type": "research_report",
+    "report_type": {
+        "__enum__": "ReportType.RESEARCH_REPORT"
+    },
     "agent_type": null,
-    "data_source": "web",
+    "data_source": {
+        "__enum__": "DataSource.WEB"
+    },
     "agents_role_prompt": null,
     "main_research_topic": "",
+    "custom_search_urls": [],
     "visited_urls": [],
     "initial_findings": [],
     "research_findings": [],

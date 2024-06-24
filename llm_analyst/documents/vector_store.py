@@ -1,3 +1,7 @@
+"""
+This module provides the `VectorStore` class for managing a vector database 
+with document embedding capabilities.
+"""
 import asyncio
 import hashlib
 import os
@@ -8,7 +12,7 @@ from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import CharacterTextSplitter
 from llm_analyst.documents.document import DocumentLoader
 from llm_analyst.core.exceptions import LLMAnalystsException
-from llm_analyst.utils.app_logging import trace_log, logging
+from llm_analyst.utils.app_logging import logging
 
 
 class VectorStore:
