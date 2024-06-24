@@ -11,7 +11,7 @@ AGENT_ROLE_PROMPT = "You are a well-informed AI news analyst assistant. Your pri
 
 
 @pytest.mark.asyncio
-async def test_chat_response_1():
+async def test_chat_model_groq():
     function_name = inspect.currentframe().f_code.co_name
     prompt = 'Write 5 Google search queries to search online that form an objective opinion from the following task: What happened in the latest burning man floods?\nUse the current date if needed: May 21, 2024.\nAlso include in the queries specified task details such as locations, names, etc.\nYou must respond with a list of strings in the following format: ["query 1", "query 2", "query 3"]. The response should contain ONLY the list'
     model = "llama3-70b-8192"

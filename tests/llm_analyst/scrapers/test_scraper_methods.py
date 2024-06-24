@@ -31,7 +31,7 @@ def setup_research_state(function_name):
     return llm_analyst, research_state
 
 
-def test_scrape_urls():
+def test_scraper_scrape_urls():
     function_name = inspect.currentframe().f_code.co_name
     llm_analyst, research_state = setup_research_state("tst_research_state_4")
 

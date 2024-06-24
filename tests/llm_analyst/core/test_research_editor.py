@@ -34,9 +34,9 @@ def setup_research_state(function_name):
 
 
 @pytest.mark.asyncio
-async def test_create_detailed_report():
+async def test_editor_create_detailed_report():
     function_name = inspect.currentframe().f_code.co_name
-    research_topic = "What happened in the latest burning man floods?"
+    research_topic = "What is Langchain? And what can we expect from this product in the future?"
 
     config = Config()
     config._set_values_for_config(CONFIG_PARAMS)

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.asyncio
-async def test_create():
+async def test_vector_storecreate():
     function_name = inspect.currentframe().f_code.co_name
 
     cache_directory = os.path.join(OUTPUT_PATH, "cache")
@@ -32,7 +32,7 @@ async def test_create():
 
 
 @pytest.mark.asyncio
-async def test_retrieve_docs_for_query():
+async def test_vector_storeretrieve_docs_for_query():
     function_name = inspect.currentframe().f_code.co_name
 
     cache_directory = os.path.join(OUTPUT_PATH, "cache")
@@ -49,7 +49,7 @@ async def test_retrieve_docs_for_query():
 
 
 @pytest.mark.asyncio
-async def test_retrieve_pages_for_query():
+async def test_vector_storeretrieve_pages_for_query():
     function_name = inspect.currentframe().f_code.co_name
 
     cache_directory = os.path.join(OUTPUT_PATH, "cache")

@@ -31,7 +31,7 @@ def setup_research_state(function_name):
     return llm_writer, research_state
 
 
-def test_extract_headers():
+def test_writer_extract_headers():
     function_name = inspect.currentframe().f_code.co_name
     llm_writer, research_state = setup_research_state("tst_research_state_5")
     report_headers = llm_writer._extract_headers()
@@ -40,7 +40,7 @@ def test_extract_headers():
 
 
 @pytest.mark.asyncio
-async def test_write_introduction():
+async def test_writer_write_introduction():
     function_name = inspect.currentframe().f_code.co_name
     llm_writer, research_state = setup_research_state("tst_research_state_5")
     report_intro = await llm_writer.write_introduction()
@@ -48,7 +48,7 @@ async def test_write_introduction():
 
 
 @pytest.mark.asyncio
-async def test_write_table_of_contents():
+async def test_writer_write_table_of_contents():
     function_name = inspect.currentframe().f_code.co_name
     llm_writer, research_state = setup_research_state("tst_research_state_5")
     toc = await llm_writer.write_table_of_contents()
@@ -56,7 +56,7 @@ async def test_write_table_of_contents():
 
 
 @pytest.mark.asyncio
-async def test_write_references():
+async def test_writer_write_references():
     function_name = inspect.currentframe().f_code.co_name
     llm_writer, research_state = setup_research_state("tst_research_state_5")
     references = await llm_writer.write_references()

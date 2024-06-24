@@ -11,7 +11,7 @@ from llm_analyst.core.prompts import Prompts
 from tests.utils_for_pytest import dump_test_results, get_resource_file_path
 
 
-def test_load_prompts():
+def test_prompts_load_prompts():
     """Test loading the default prompts"""
     prompts = Prompts()
     expected_result = 10
@@ -20,7 +20,7 @@ def test_load_prompts():
     assert actual_result == expected_result
 
 
-def test_load_prompts_from_env():
+def test_prompts_load_prompts_from_env():
     """Test prompts loading from an environment configuration"""
     expected_result = "Write {max_iterations} Google search queries"
     prompt_json_path = get_resource_file_path("tst_prompts.json")
@@ -35,7 +35,7 @@ def test_load_prompts_from_env():
     assert actual_results.startswith(expected_result)
 
 
-def test_prompt_no_params():
+def test_prompts_prompt_no_params():
     """Tes a prompt that has no parameters"""
     prompts = Prompts()
     expected_result = "This task involves researching"
@@ -44,7 +44,7 @@ def test_prompt_no_params():
     assert actual_result.startswith(expected_result)
 
 
-def test_prompt_exception():
+def test_prompts_prompt_exception():
     """Test the exception from calling a prompt with the wrong parameters"""
     prompts = Prompts()
     expected_result = "ERROR: The PROMPT: [search_queries_prompt] expects the following VARIABLES: [max_iterations, task, datetime_now]"
@@ -58,7 +58,7 @@ def test_prompt_exception():
     assert actual_result == expected_result
 
 
-def test_prompt_with_params():
+def test_prompts_prompt_with_params():
     """Test a prompt and pass parameters"""
     function_name = inspect.currentframe().f_code.co_name
     prompts = Prompts()
@@ -78,8 +78,8 @@ def test_prompt_with_params():
     dump_test_results(function_name, actual_result)
 
 
-def test_report_prompt():
-    """Test the creatation of the report prompt"""
+def test_prompts_report_prompt():
+    """Test the creation of the report prompt"""
     function_name = inspect.currentframe().f_code.co_name
     prompts = Prompts()
     expected_result = "Information: '''context data....'''"

@@ -46,8 +46,8 @@ async def test_analyst_init():
 
 
 @pytest.mark.asyncio
-async def test_choose_agent():
-    """Test choosing the Agent Type and Prompt base upon the Reseach Topic"""
+async def test_analyst_choose_agent():
+    """Test choosing the Agent Type and Prompt base upon the Research Topic"""
     function_name = inspect.currentframe().f_code.co_name
     llm_analyst, research_state = setup_research_state("tst_research_state_1")
     actual_result = await llm_analyst.choose_agent()
@@ -60,7 +60,7 @@ async def test_choose_agent():
 
 
 @pytest.mark.asyncio
-async def test_select_subtopic():
+async def test_analyst_select_subtopic():
     function_name = inspect.currentframe().f_code.co_name
     llm_analyst, research_state = setup_research_state("tst_research_state_4")
 
@@ -74,7 +74,7 @@ async def test_select_subtopic():
 
 
 @pytest.mark.asyncio
-async def test_get_sub_queries():
+async def test_analyst_get_sub_queries():
     function_name = inspect.currentframe().f_code.co_name
     llm_analyst, research_state = setup_research_state("tst_research_state_1")
 
@@ -92,7 +92,7 @@ async def test_get_sub_queries():
 
 
 @pytest.mark.asyncio
-async def test_keep_unique_urls():
+async def test_analyst_keep_unique_urls():
     function_name = inspect.currentframe().f_code.co_name
     llm_analyst, research_state = setup_research_state("tst_research_state_4")
 
@@ -108,7 +108,7 @@ async def test_keep_unique_urls():
 
 
 @pytest.mark.asyncio
-async def test_get_similar_content_by_query():
+async def test_analyst_get_similar_content_by_query():
     function_name = inspect.currentframe().f_code.co_name
     llm_analyst, research_state = setup_research_state("tst_research_state_4")
 
@@ -124,7 +124,7 @@ async def test_get_similar_content_by_query():
 
 
 # @pytest.mark.asyncio
-# async def test_conduct_research():
+# async def test_analyst_conduct_research():
 #     function_name = inspect.currentframe().f_code.co_name
 #     llm_analyst, research_state = setup_research_analysts("tst_research_state_1")
 
@@ -134,7 +134,7 @@ async def test_get_similar_content_by_query():
 
 
 @pytest.mark.asyncio
-async def test_write_report():
+async def test_analyst_write_report():
     function_name = inspect.currentframe().f_code.co_name
     llm_analyst, research_state = setup_research_state("tst_research_state_4")
 

@@ -13,7 +13,7 @@ from llm_analyst.core.config import Config
 logger = logging.getLogger(__name__)
 
 
-def test_get_context():
+def test_context_compressor_get_context():
     function_name = inspect.currentframe().f_code.co_name
     config = Config()
     local_store_dir = get_resource_file_path("tst_documents")

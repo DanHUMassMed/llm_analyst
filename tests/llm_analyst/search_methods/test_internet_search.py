@@ -31,7 +31,7 @@ def setup_search_config(search_method_nm, search_method):
     return config
 
 
-def test_tavily_search():
+def test_search_tavily_search():
     function_name = inspect.currentframe().f_code.co_name
     query = "What happened in the latest burning man floods?"
     config = setup_search_config("tavily_search", tavily_search)
@@ -41,7 +41,7 @@ def test_tavily_search():
     dump_test_results(function_name, actual_result)
 
 
-def test_serper_search():
+def test_search_serper_search():
     function_name = inspect.currentframe().f_code.co_name
     query = "What happened in the latest burning man floods?"
     config = setup_search_config("serper_search", serper_search)
@@ -51,7 +51,7 @@ def test_serper_search():
     dump_test_results(function_name, actual_result)
 
 
-def test_serp_api_search():
+def test_search_serp_api_search():
     function_name = inspect.currentframe().f_code.co_name
     query = "What happened in the latest burning man floods?"
     config = setup_search_config("serp_api_search", serp_api_search)
@@ -61,7 +61,7 @@ def test_serp_api_search():
     dump_test_results(function_name, actual_result)
 
 
-def test_ddg_search():
+def test_search_ddg_search():
     function_name = inspect.currentframe().f_code.co_name
     query = "What happened in the latest burning man floods?"
     config = setup_search_config("ddg_search", ddg_search)
@@ -71,7 +71,7 @@ def test_ddg_search():
     dump_test_results(function_name, actual_result)
 
 
-def test_google_search():
+def test_search_google_search():
     function_name = inspect.currentframe().f_code.co_name
     query = "What happened in the latest burning man floods?"
     config = setup_search_config("google_search", google_search)
@@ -81,7 +81,7 @@ def test_google_search():
     dump_test_results(function_name, actual_result)
 
 
-def test_bing_search():
+def test_search_bing_search():
     function_name = inspect.currentframe().f_code.co_name
     query = "What happened in the latest burning man floods?"
     config = setup_search_config("bing_search", bing_search)

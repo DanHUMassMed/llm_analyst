@@ -36,7 +36,7 @@ def setup_research_state(function_name):
 
 
 @pytest.mark.asyncio
-async def test_publish_to_md_file():
+async def test_publisher_publish_to_md_file():
     function_name = inspect.currentframe().f_code.co_name
     llm_publisher, research_state = setup_research_state("tst_research_state_5")
     report_intro = await llm_publisher.publish_to_md_file()
@@ -44,7 +44,7 @@ async def test_publish_to_md_file():
 
 
 @pytest.mark.asyncio
-async def test_publish_to_pdf_file():
+async def test_publisher_publish_to_pdf_file():
     function_name = inspect.currentframe().f_code.co_name
     llm_publisher, research_state = setup_research_state("tst_research_state_5")
     report_intro = await llm_publisher.publish_to_pdf_file()
@@ -52,7 +52,7 @@ async def test_publish_to_pdf_file():
 
 
 @pytest.mark.asyncio
-async def test_publish_to_word_file():
+async def test_publisher_publish_to_word_file():
     function_name = inspect.currentframe().f_code.co_name
     llm_publisher, research_state = setup_research_state("tst_research_state_5")
     report_intro = await llm_publisher.publish_to_word_file()

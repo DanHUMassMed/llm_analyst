@@ -56,7 +56,7 @@ def assert_all_attributes(research_state_l, research_state_r):
     assert research_state_l.final_report_md == research_state_r.final_report_md
 
 
-def test_dump_and_load():
+def test_research_state_dump_and_load():
     """Test dump and load ensure that data remain consistent"""
     test_research_state = setup_research_state()
 
@@ -68,7 +68,7 @@ def test_dump_and_load():
     assert_all_attributes(test_research_state, loaded_research_state)
 
 
-def test_dump_and_load_minimal():
+def test_research_state_dump_and_load_minimal():
     """Test dump and load ensure that data remain consistent"""
     test_research_state = ResearchState(
         active_research_topic="This is the active topic"
@@ -81,7 +81,7 @@ def test_dump_and_load_minimal():
     assert_all_attributes(test_research_state, loaded_research_state)
 
 
-def test_copy_research_state():
+def test_research_state_copy_research_state():
     test_research_state = setup_research_state()
     copy_of_research_state = test_research_state.copy_state()
 

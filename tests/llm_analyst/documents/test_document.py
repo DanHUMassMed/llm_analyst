@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.asyncio
-async def test_load_document():
+async def test_document_loader_load_document():
     function_name = inspect.currentframe().f_code.co_name
     local_store_dir = get_resource_file_path("tst_documents")
     file_path = f"{local_store_dir}/Nature-An ARC-Mediator_subunit_required_for_SREBP_control_of_cholesterol_and_lipid_homeostasis.pdf"
@@ -24,7 +24,7 @@ async def test_load_document():
 
 
 @pytest.mark.asyncio
-async def test_load_documents():
+async def test_document_loader_load_documents():
     function_name = inspect.currentframe().f_code.co_name
     local_store_dir = get_resource_file_path("tst_documents")
     document_loader = DocumentLoader(local_store_dir)
@@ -35,7 +35,7 @@ async def test_load_documents():
 
 
 @pytest.mark.asyncio
-async def test_load():
+async def test_document_loader_load():
     function_name = inspect.currentframe().f_code.co_name
     local_store_dir = get_resource_file_path("tst_documents")
 

@@ -10,7 +10,7 @@ from llm_analyst.chat_models.openai import OPENAI_Model
 from llm_analyst.core.config import Config
 
 
-def test_use_local_config():
+def test_config_use_local_config():
     """Test finding the config file from an environment variable"""
     file_path = get_resource_file_path("tst_llm_analyst.config")
     os.environ["LLM_ANALYST_CONFIG"] = file_path
@@ -22,7 +22,7 @@ def test_use_local_config():
     assert actual_result == expected_result
 
 
-def test_embedding_provider_lookup():
+def test_config_embedding_provider_lookup():
     """Test if the embedding provider lookup sets the value using defualt config"""
     os.environ.pop("LLM_ANALYST_CONFIG", None)
     config = Config()
@@ -32,7 +32,7 @@ def test_embedding_provider_lookup():
     assert actual_result == expected_result
 
 
-def test_llm_provider_lookup():
+def test_config_llm_provider_lookup():
     """Test if the LLM Model gets set on config"""
     config = Config()
     expected_result = OPENAI_Model
@@ -41,7 +41,7 @@ def test_llm_provider_lookup():
     assert actual_result == expected_result
 
 
-def test_get_prompt_json_path():
+def test_config_get_prompt_json_path():
     """Test if an environment variable can be used for the prompt json path"""
     prompt_json_path = get_resource_file_path("tst_prompts.json")
     config_params = {"prompt_json_path": prompt_json_path}
