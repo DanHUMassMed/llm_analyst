@@ -23,7 +23,7 @@ def test_config_use_local_config():
 
 
 def test_config_embedding_provider_lookup():
-    """Test if the embedding provider lookup sets the value using defualt config"""
+    """Test if the embedding provider lookup sets the value using default config"""
     os.environ.pop("LLM_ANALYST_CONFIG", None)
     config = Config()
     expected_result = OpenAIEmbeddings()
@@ -51,7 +51,6 @@ def test_config_get_prompt_json_path():
 
     actual_results = config.get_prompt_json_path()
     assert actual_results == prompt_json_path
-
 
 if __name__ == "__main__":
     pytest.main([__file__])

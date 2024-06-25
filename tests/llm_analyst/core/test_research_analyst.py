@@ -10,7 +10,7 @@ from llm_analyst.core.research_analyst import LLMAnalyst
 from llm_analyst.core.research_state import ResearchState
 from tests.utils_for_pytest import dump_test_results, get_resource_file_path
 
-#Models gpt-3.5-turbo, gpt-4o-2024-05-13
+# Models gpt-3.5-turbo, gpt-4o-2024-05-13
 CONFIG_PARAMS = {
     "internet_search": "ddg_search",
     "llm_provider": "openai",
@@ -37,10 +37,10 @@ async def test_analyst_init():
     """Test the init method"""
     function_name = inspect.currentframe().f_code.co_name
     llm_analyst, research_state = setup_research_state("tst_research_state_1")
-    
+
     assert llm_analyst.data_source == DataSource.WEB
     assert llm_analyst.report_type == ReportType.RESEARCH_REPORT
-    
+
     # Assertion: Check that the function returns the expected result
     assert research_state.dump() == llm_analyst.dump()
 

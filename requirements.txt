@@ -34,3 +34,5 @@ tavily-python
 unstructured
 uvicorn
 websockets
+pyvirtualdisplay
+selenium

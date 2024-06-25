@@ -24,3 +24,6 @@ async def test_chat_model_groq():
     # Assertion: Check that the function returns more than 1 result in the list
     assert len(actual_result) > 1
     dump_test_results(function_name, actual_result, to_json=False)
+
+if __name__ == "__main__":
+    pytest.main([__file__])

@@ -8,7 +8,7 @@ import pytest
 from llm_analyst.core.config import Config
 from llm_analyst.core.research_editor import LLMEditor
 from llm_analyst.core.research_state import ResearchState
-from tests.utils_for_pytest import dump_test_results, get_resource_file_path, OUTPUT_PATH
+from tests.utils_for_pytest import dump_test_results, get_resource_file_path
 
 logger = logging.getLogger(__name__)
 
