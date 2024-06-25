@@ -27,7 +27,7 @@ def test_prompts_load_prompts_from_env():
     config_params = {"prompt_json_path": prompt_json_path}
 
     config = Config()
-    config._set_values_for_config(config_params)
+    config.set_values_for_config(config_params)
 
     Prompts.reset_instance()
     actual_results = Prompts(config).get_prompt("this_is_a_test_prompt")

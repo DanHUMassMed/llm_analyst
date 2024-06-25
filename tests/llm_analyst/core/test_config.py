@@ -47,10 +47,23 @@ def test_config_get_prompt_json_path():
     config_params = {"prompt_json_path": prompt_json_path}
 
     config = Config()
-    config._set_values_for_config(config_params)
+    config.set_values_for_config(config_params)
 
     actual_results = config.get_prompt_json_path()
     assert actual_results == prompt_json_path
+
+def test_config_set_values_for_config():
+    """Test if an environment variable can be used for the prompt json path"""
+    
+    config_params = {
+        "llm_model"       :"test_gpt-4o-2024-05-13",
+        "local_store_dir" :"tests/resources/tst_documents"
+    }
+    config = Config()
+    config.set_values_for_config(config_params)
+    assert config.llm_model == config_params['llm_model']
+    assert config.local_store_dir == config_params['local_store_dir']
+    
 
 if __name__ == "__main__":
     pytest.main([__file__])

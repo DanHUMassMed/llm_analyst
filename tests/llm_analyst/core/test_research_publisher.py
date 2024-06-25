@@ -29,7 +29,7 @@ def setup_research_state(function_name):
     research_state = ResearchState.load(test_json_file_path)
 
     config = Config()
-    config._set_values_for_config(CONFIG_PARAMS)
+    config.set_values_for_config(CONFIG_PARAMS)
 
     llm_publisher = LLMPublisher(config=config, **research_state.dump())
     return llm_publisher, research_state

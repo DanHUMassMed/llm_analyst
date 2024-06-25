@@ -2,6 +2,7 @@
 
 import inspect
 import os
+import shutil
 import logging
 from tests.utils_for_pytest import (
     dump_test_results,
@@ -17,22 +18,26 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.asyncio
-async def test_vector_storecreate():
+async def test_vector_store_create():
     function_name = inspect.currentframe().f_code.co_name
 
     cache_directory = os.path.join(OUTPUT_PATH, "cache")
-    if not os.path.exists(cache_directory):
+    if os.path.exists(cache_directory):
+        shutil.rmtree(cache_directory)
+    else:
         os.makedirs(cache_directory)
-
+    
     local_store_dir = get_resource_file_path("tst_documents")
 
     vector_db = await VectorStore.create(cache_directory, local_store_dir)
-
-    # dump_test_results(function_name, document_data)
+    query = "stress response"
+    actual_result = await vector_db.retrieve_docs_for_query(query)
+    
+    dump_test_results(function_name, actual_result,to_json=False)
 
 
 @pytest.mark.asyncio
-async def test_vector_storeretrieve_docs_for_query():
+async def test_vector_store_retrieve_docs_for_query():
     function_name = inspect.currentframe().f_code.co_name
 
     cache_directory = os.path.join(OUTPUT_PATH, "cache")
@@ -49,7 +54,7 @@ async def test_vector_storeretrieve_docs_for_query():
 
 
 @pytest.mark.asyncio
-async def test_vector_storeretrieve_pages_for_query():
+async def test_vector_store_retrieve_pages_for_query():
     function_name = inspect.currentframe().f_code.co_name
 
     cache_directory = os.path.join(OUTPUT_PATH, "cache")

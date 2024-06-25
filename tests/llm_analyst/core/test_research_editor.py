@@ -27,7 +27,7 @@ def setup_research_state(function_name):
     research_state = ResearchState.load(test_json_file_path)
 
     config = Config()
-    config._set_values_for_config(CONFIG_PARAMS)
+    config.set_values_for_config(CONFIG_PARAMS)
 
     llm_editor = LLMEditor(config=config, **research_state.dump())
     return llm_editor, research_state
@@ -39,7 +39,7 @@ async def test_editor_create_detailed_report():
     research_topic = "What is Langchain? And what can we expect from this product in the future?"
 
     config = Config()
-    config._set_values_for_config(CONFIG_PARAMS)
+    config.set_values_for_config(CONFIG_PARAMS)
     llm_editor = LLMEditor(active_research_topic=research_topic, config=config)
 
     actual_result = await llm_editor.create_detailed_report()

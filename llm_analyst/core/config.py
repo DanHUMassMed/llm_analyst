@@ -2,23 +2,6 @@
 This module provides a Config class for the LLM Analyst application, 
 enabling configuration management through JSON files and environment variables.
 
-    "internet_search"             "ddg_search"            Any method name from internet_search.py
-    "embedding_provider"          :"openai"               ollama, huggingface
-    "llm_provider"                :"openai"               Any module under "chat_models" directory
-    "llm_model"                   :"gpt-4o-2024-05-13"    A capability from chosen llm_provider
-    "llm_token_limit"             :4000                   An attribute of the chosen llm_provider
-    "llm_temperature"             :0.25                   An attribute of the chosen llm_provider
-    "browse_chunk_max_length"     :8192                   NOT USED
-    "summary_token_limit"         :700                    NOT USED
-    "max_search_results_per_query":5                      Used by internet_search provider
-    "total_words"                 :1000                   Passed as an attribute to the report prompt
-    "max_subsections"             :5                      Passed as an attribute to the SUBTOPIC_REPORT prompt
-    "max_iterations"              :3                      Passed as an attribute to the search_queries_prompt
-    "max_subtopics"               :3                      Passed as an attribute to the subtopics_prompt
-    "report_out_dir"              :"~/llm_analyst_out"    Location where Publisher places output reports
-    "local_store_dir"             :""                     Location of the local data store
-    "cache_dir"                   :"~/.cache/llm_analyst" Location of the Vector DB
-
 """
 
 import importlib.util
@@ -52,37 +35,42 @@ class DataSource(Enum):
 class Config:
     """Config class for LLM Analyst.
     """
-
+    
     def __init__(self):
-        self.__data = None
-        config_json = self._get_config_file()  # Get Default values JSON
-        self.__data = self._set_values_for_config(config_json)
+        # These Attributes are added so the IDE identifies them as valid
+        self.internet_search = None              # Any method name from internet_search.py
+        self.embedding_provider = None           # embedding_provider options [ollama, huggingface]
+        self.llm_provider = None                 # Any module under "chat_models" directory
+        self.llm_model = None                    # A capability from chosen llm_provider
+        self.llm_token_limit = None              # An attribute of the chosen llm_provider
+        self.llm_temperature = None              # An attribute of the chosen llm_provider
+        self.browse_chunk_max_length = None      # NOT USED
+        self.summary_token_limit = None          # NOT USED
+        self.max_search_results_per_query = None # Used by internet_search provider
+        self.total_words = None                  # Passed as an attribute to the report prompt
+        self.max_subsections = None              # Passed as an attribute to the SUBTOPIC_REPORT prompt
+        self.max_iterations = None               # Passed as an attribute to the search_queries_prompt
+        self.max_subtopics = None                # Passed as an attribute to the subtopics_prompt
+        self.report_out_dir = None               # Location where Publisher places output reports
+        self.local_store_dir = None              # Location of the local data store
+        self.cache_dir = None                    # Location of the Vector DB
+       
         # Set LLM_ANALYST_CONFIG environment variable to override and default configurations
         config_file_path = os.getenv("LLM_ANALYST_CONFIG", None)
-        if config_file_path:
-            config_json = self._get_config_file(config_file_path=config_file_path)
-            self.__data = self._set_values_for_config(config_json)
-
-    def __getattr__(self, name):
-        try:
-            return getattr(self.__data, name)
-        except AttributeError:
-            return self.__data[name]
-
-    def __dir__(self):
-        return self.__data.keys()
+        config_json = self._get_config_file(config_file_path=config_file_path)
+        self.set_values_for_config(config_json)
 
     def __str__(self):
-        ret_val = ""
-        for key in self.__data:
-            ret_val += f"{key} = {self.__data[key]}\n"
-        return ret_val
+        attributes = []
+        for key, value in self.__dict__.items():
+            attributes.append(f"{key}={value}")
+        return "\n".join(attributes)
 
     def get_prompt_json_path(self):
         """Get the user defined path to prompts json 'prompt_json_path'
         or return the defaults if a configuration is not provided
         """
-        prompt_json_path = self.__data.get("prompt_json_path", None)
+        prompt_json_path = getattr(self, "prompt_json_path", None)
         if not prompt_json_path:
             package_nm = "llm_analyst.resources"
             module_spec = importlib.util.find_spec(package_nm)
@@ -108,14 +96,11 @@ class Config:
 
         return config_json
 
-    def _set_values_for_config(self, config_json):
+    def set_values_for_config(self, config_json):
         """Set the config properties in a dictionary.
         Evaluate the the property name to determine the correct data type.
         """
-        config_data = {}
-        if self.__data:
-            config_data = self.__data
-
+        
         for key, value in config_json.items():
             if keyword.iskeyword(key):
                 key += "_"
@@ -127,8 +112,8 @@ class Config:
                 value = env_val if env_val else default_val
 
             if key.endswith("_dir") and value:
-                # If this is a directory key check if special charater ~ is used
-                # and if so exapnd the ~ to the full home dir path
+                # If this is a directory key check if special charter ~ is used
+                # and if so expand the ~ to the full home dir path
                 if value[0] == "~":
                     value = os.path.expanduser(value)
 
@@ -141,9 +126,8 @@ class Config:
             if key == "llm_provider" and value is not None:
                 value = self._get_llm_model(value)
 
-            config_data[key] = value
+            setattr(self, key, value)
 
-        return config_data
 
     def _get_search_method(self, search_method: str):
         """Convert the search_method from a string to a callable function.

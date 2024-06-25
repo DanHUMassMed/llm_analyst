@@ -2,14 +2,19 @@
 This module provides the `VectorStore` class for managing a vector database 
 with document embedding capabilities.
 """
-import asyncio
 import hashlib
 import os
 import re
 
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Chroma
+
+
+from langchain_chroma import Chroma
+from langchain_community.document_loaders import TextLoader
+from langchain_community.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
+
+
 from llm_analyst.documents.document import DocumentLoader
 from llm_analyst.core.exceptions import LLMAnalystsException
 from llm_analyst.utils.app_logging import logging
@@ -23,30 +28,23 @@ class VectorStore:
         self.local_data_directory = local_data_directory
         self.local_db_hash = self._stored_db_hash()
 
-        model_name = "sentence-transformers/all-MiniLM-l6-v2"
-        model_kwargs = {"device": "cpu"}
-        encode_kwargs = {"normalize_embeddings": False}
-        self.embedding_model = HuggingFaceEmbeddings(
-            model_name=model_name,
-            model_kwargs=model_kwargs,
-            encode_kwargs=encode_kwargs,
-        )
+        self.embedding_function = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
         
         if not os.path.exists(self.persist_directory):
             os.makedirs(self.persist_directory)
+            
         self.vector_db = Chroma(
                 persist_directory=self.persist_directory,
-                embedding_function=self.embedding_model,
+                embedding_function=self.embedding_function,
             )
             
-    def reset_vector_store_db(self):
-            self.vector_db.delete_collection()
+
         
     async def async_init(self):
         # Asynchronous initialization
         if self.local_data_directory:
             local_db_hash = self._local_db_hash()
-            if local_db_hash != self.local_db_hash:
+            if self.local_db_hash is None or local_db_hash != self.local_db_hash:
                 self.local_db_hash = local_db_hash
                 document_loader = DocumentLoader(self.local_data_directory)
                 documents = await document_loader.load_local_documents()
@@ -58,7 +56,7 @@ class VectorStore:
                 chunked_documents = text_splitter.split_documents(documents)
                 self.vector_db = await Chroma.afrom_documents(
                                                     chunked_documents,
-                                                    self.embedding_model,
+                                                    self.embedding_function,
                                                     persist_directory=self.persist_directory,
                                                 )
                 self.__store_db_hash()
@@ -70,17 +68,6 @@ class VectorStore:
         instance = cls(cache_directory, local_data_directory)
         await instance.async_init()
         return instance
-
-    async def add_documents(self, documents):
-        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-        print(f"type {type(documents)}")
-        chunked_documents = text_splitter.split_documents(documents)
-        
-        # for chunked_doc in chunked_documents:
-        #     print(f"type {type(chunked_doc)}")
-        #     await self.vector_db.aadd_documents(chunked_doc)
-        
-
     
     def __compute_hash(self, directory_path):
         """Compute a single SHA-256 hash for the entire directory."""
@@ -124,11 +111,9 @@ class VectorStore:
         return ret_val
 
     async def retrieve_docs_for_query(self, query, max_docs=6, score_threshold=0.2):
-        retriever = self.vector_db.as_retriever(
-            search_type="similarity_score_threshold",
-            search_kwargs={"k": max_docs, "score_threshold": score_threshold},
-        )
-        return await retriever.ainvoke(query)
+        # The returned distance score is cosine distance. Therefore, a lower score is better.
+        docs = await self.vector_db.asimilarity_search_with_score(query, k=max_docs)
+        return docs
 
     def _format_url(self, source_nm):
         pub_med_ref = r"^PM\d+\.txt$"

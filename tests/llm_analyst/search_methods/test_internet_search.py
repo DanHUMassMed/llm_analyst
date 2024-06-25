@@ -22,7 +22,7 @@ def setup_search_config(search_method_nm, search_method):
     config_json = {"internet_search": search_method_nm}
 
     config = Config()
-    config._set_values_for_config(config_json)
+    config.set_values_for_config(config_json)
 
     expected_result = search_method
     actual_result = config.internet_search
