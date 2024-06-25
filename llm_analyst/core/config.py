@@ -1,6 +1,24 @@
 """
 This module provides a Config class for the LLM Analyst application, 
 enabling configuration management through JSON files and environment variables.
+
+    "internet_search"             "ddg_search"            Any method name from internet_search.py
+    "embedding_provider"          :"openai"               ollama, huggingface
+    "llm_provider"                :"openai"               Any module under "chat_models" directory
+    "llm_model"                   :"gpt-4o-2024-05-13"    A capability from chosen llm_provider
+    "llm_token_limit"             :4000                   An attribute of the chosen llm_provider
+    "llm_temperature"             :0.25                   An attribute of the chosen llm_provider
+    "browse_chunk_max_length"     :8192                   NOT USED
+    "summary_token_limit"         :700                    NOT USED
+    "max_search_results_per_query":5                      Used by internet_search provider
+    "total_words"                 :1000                   Passed as an attribute to the report prompt
+    "max_subsections"             :5                      Passed as an attribute to the SUBTOPIC_REPORT prompt
+    "max_iterations"              :3                      Passed as an attribute to the search_queries_prompt
+    "max_subtopics"               :3                      Passed as an attribute to the subtopics_prompt
+    "report_out_dir"              :"~/llm_analyst_out"    Location where Publisher places output reports
+    "local_store_dir"             :""                     Location of the local data store
+    "cache_dir"                   :"~/.cache/llm_analyst" Location of the Vector DB
+
 """
 
 import importlib.util
