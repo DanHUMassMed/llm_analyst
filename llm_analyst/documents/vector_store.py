@@ -60,6 +60,8 @@ class VectorStore:
                                                     persist_directory=self.persist_directory,
                                                 )
                 self.__store_db_hash()
+            else:
+                logging.info("*** Using Cached Repo. ***")
 
             
 
@@ -97,7 +99,6 @@ class VectorStore:
         try:
             with open(hash_file, "w", encoding="utf-8") as file:
                 file.write(self.local_db_hash)
-            logging.debug(f"Hash written to {hash_file}")
         except IOError as e:
             logging.error(f"Failed to write hash to {hash_file}: {e}")
 
@@ -107,12 +108,14 @@ class VectorStore:
         if os.path.exists(hash_file):
             with open(hash_file, "r", encoding="utf-8") as file:
                 ret_val = file.read().strip()
-        logging.debug(f"Hash read {hash_file}")
         return ret_val
 
     async def retrieve_docs_for_query(self, query, max_docs=6, score_threshold=0.2):
         # The returned distance score is cosine distance. Therefore, a lower score is better.
+        # Note currently not using the score but it could be useful later
         docs = await self.vector_db.asimilarity_search_with_score(query, k=max_docs)
+        if docs:
+            docs = [doc[0] for doc in docs]
         return docs
 
     def _format_url(self, source_nm):

@@ -7,7 +7,7 @@ import pytest
 from llm_analyst.core.config import Config
 from llm_analyst.core.research_analyst import LLMAnalyst
 from llm_analyst.core.research_state import ResearchState
-from llm_analyst.scrapers.scraper_methods import scrape_urls
+from llm_analyst.scrapers.scraper_methods import scrape_urls,cell_selenium_scraper
 from tests.utils_for_pytest import dump_test_results, get_resource_file_path
 
 CONFIG_PARAMS = {
@@ -39,6 +39,17 @@ def test_scraper_scrape_urls():
 
     # Just check that you do get results
     assert len(actual_result) > 0
+    dump_test_results(function_name, actual_result)
+
+def test_scraper_cell_selenium_scraper():
+    function_name = inspect.currentframe().f_code.co_name
+    llm_analyst, research_state = setup_research_state("tst_research_state_4")
+
+    # NOTE: On Mac "xhost +" XQuartz must be running for the selenium_scraper to attach
+    actual_result = cell_selenium_scraper("https://www.cell.com/trends/cell-biology/fulltext/S0962-8924(20)30101-X")
+
+    # Just check that you do get results
+    #assert len(actual_result) > 0
     dump_test_results(function_name, actual_result)
 
 if __name__ == "__main__":

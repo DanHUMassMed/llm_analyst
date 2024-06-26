@@ -17,7 +17,7 @@ packages = find_packages(include=['llm_analyst', 'llm_analyst.*'], exclude=['tes
 print("Discovered packages:", packages)
 
 setup(name='research-task',
-      version='0.1.4',
+      version='0.1.7',
       description='LLM Research tool',
       long_description_content_type="text/markdown",
       long_description=long_description,
