@@ -23,4 +23,4 @@ local_store_1/
 build/
 notebooks_local/
 reports_data/
-notebooks/data/cache
+notebooks/data
